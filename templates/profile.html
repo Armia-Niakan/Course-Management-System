@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ username }}'s Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<style>
+    .w3-hover-rounded:hover {
+      border-radius: 8px;
+    }
+    .profile-card {
+        border-radius: 12px;
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+    }
+
+    .profile-info-item {
+        border-bottom: 1px solid #f1f1f1;
+        padding: 16px 0;
+    }
+    .info-label {
+        font-weight: bold;
+        color: #666;
+    }
+</style>
+
+<body class="w3-light-grey">
+
+<!-- Top Navigation -->
+<div class="w3-top">
+    <div class="w3-bar w3-deep-purple w3-card">
+        <a href="/dashboard" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="/courses" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-book"></i> Courses
+        </a> 
+        <a href="/calendar" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-calendar"></i> Calendar
+        </a>
+        <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+            <i class="fas fa-user-circle"></i> {{ username }}
+        </button>
+    </div>
+</div>
+
+<!-- Right Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-right" 
+     style="width:280px;right:0;display:none;z-index:3" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-right-align">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="w3-container w3-padding-16 w3-center">
+        <div class="w3-display-container" style="width:100%"></div>
+        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+        <span class="w3-tag w3-round w3-deep-purple">{{ role|capitalize }}</span>
+    </div>
+    <div class="w3-bar-block">
+        <a href="/profile" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-user w3-margin-right"></i> Profile
+        </a>
+        <a href="/settings" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-cog w3-margin-right"></i> Settings
+        </a>
+        <a href="/logout" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-sign-out-alt w3-margin-right"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="w3-overlay w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="w3-panel">
+        {% for category, message in messages %}
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom" 
+                 id="flash-{{ loop.index }}"
+                 style="position: relative; top: 35px">
+                {{ message }}
+                <span onclick="dismissFlash(this.parentElement)" 
+                      class="w3-button w3-right w3-hover-none" 
+                      style="position: absolute; right: 0; top: 0; padding: 8px 16px;">
+                    &times;
+                </span>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var flashMsg = document.getElementById('flash-{{ loop.index }}');
+                    if (flashMsg) {
+                        var opacity = 1;
+                        var fadeEffect = setInterval(function() {
+                            if (opacity > 0) {
+                                opacity -= 0.1;
+                                flashMsg.style.opacity = opacity;
+                            } else {
+                                clearInterval(fadeEffect);
+                                flashMsg.style.display = 'none';
+                            }
+                        }, 50);
+                    }
+                }, 5000);
+                
+                function dismissFlash(element) {
+                    element.style.display = 'none';
+                }
+            </script>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Main Content -->
+<div class="w3-content " style="margin-top:46px">
+    <div class="w3-content w3-container w3-padding-32" style="max-width: 750px;">
+            <div class="w3-margin-bottom">
+                <div class="w3-card w3-white profile-card">
+                    <div class="w3-container w3-deep-purple w3-padding-16 w3-round-xlarge">
+                        <h2 class="w3-center"><i class="fas fa-user w3-margin-right"></i> My Profile</h2>
+                    </div>
+                    <div class="w3-container w3-padding-16 w3-center">
+                        <img src="https://ui-avatars.com/api/?name={{ username }}&size=150&background=b9d4fa" 
+                             class="profile-avatar" alt="Profile Picture">
+                        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+                        <span class="w3-tag w3-round-xxlarge w3-deep-purple">
+                            {{ role|capitalize }}
+                        </span>
+                    </div>
+                    
+                    <div class="w3-container w3-padding">
+                        <div class="profile-info-item">
+                            <div class="w3-row">
+                                <div class="w3-half info-label">
+                                    <i class="fas fa-envelope w3-margin-right" style="margin-left: 80px;"></i> Email:
+                                </div>
+                                <div class="w3-right" style="margin-right: 80px;">{{ email }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="w3-row">
+                                <div class="w3-half info-label">
+                                    <i class="fas fa-user-tag w3-margin-right" style="margin-left: 80px;"></i> Account Type:
+                                </div>
+                                <div class="w3-right" style="margin-right:80px;">{{ role|capitalize }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="w3-row">
+                                <div class="w3-half info-label">
+                                    <i class="fas fa-calendar-plus w3-margin-right" style="margin-left: 80px;"></i> Member Since:
+                                </div>
+                                <div class="w3-right" style="margin-right: 80px;">
+                                    {% if user %}
+                                        {{ user.created_at|datetimeformat('%B %d, %Y') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if role == 'student' %}
+                        <div class="profile-info-item">
+                            <div class="w3-row">
+                                <div class="w3-half info-label">
+                                    <i class="fas fa-book w3-margin-right" style="margin-left: 80px;"></i> Courses Enrolled:
+                                </div>
+                                <div class="w3-right" style="margin-right: 80px;">
+                                    {{ enrollments|length if enrollments else '0' }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if role == 'teacher' %}
+                        <div class="profile-info-item">
+                            <div class="w3-row">
+                                <div class="w3-half info-label">
+                                    <i class="fas fa-chalkboard-teacher w3-margin-right" style="margin-left: 80px;"></i> Courses Teaching:
+                                </div>
+                                <div class="w3-right"style="margin-right: 80px;">
+                                    {{ courses_teaching|length if courses_teaching else '0' }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="w3-container w3-padding-16">
+                        <a href="/settings" class="w3-button w3-block w3-light-grey w3-third w3-right w3-round-large w3-margin-bottom w3-margin-right">
+                            <i class="fas fa-cog w3-margin-right"></i> Edit Profile Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- Sidebar Scripts -->
+<script>
+    function w3_open() {
+        document.getElementById("mySidebar").style.display = "block";
+        document.getElementById("myOverlay").style.display = "block";
+    }
+
+    function w3_close() {
+        document.getElementById("mySidebar").style.display = "none";
+        document.getElementById("myOverlay").style.display = "none";
+    }
+</script>
+
+</body>
+</html>

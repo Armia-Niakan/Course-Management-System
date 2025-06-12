@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ username }}'s Settings</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .w3-hover-rounded:hover {
+            border-radius: 8px;
+        }
+        .danger-zone {
+            border-left: 4px solid #f44336;
+        }
+    </style>
+</head>
+
+<body class="w3-light-grey">
+
+<!-- Top Navigation -->
+<div class="w3-top">
+    <div class="w3-bar w3-deep-purple w3-card">
+        <a href="/dashboard" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="/courses" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-book"></i> Courses
+        </a> 
+        <a href="/calendar" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-calendar"></i> Calendar
+        </a>
+        <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+            <i class="fas fa-user-circle"></i> {{ username }}
+        </button>
+    </div>
+</div>
+
+<!-- Right Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-right" style="width:280px;right:0;display:none;z-index:3" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-right-align">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="w3-container w3-padding-16 w3-center">
+        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+        <span class="w3-tag w3-round w3-deep-purple">{{ role|capitalize }}</span>
+    </div>
+    <div class="w3-bar-block">
+        <a href="/profile" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-user w3-margin-right"></i> Profile
+        </a>
+        <a href="/settings" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-cog w3-margin-right"></i> Settings
+        </a>
+        <a href="/logout" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-sign-out-alt w3-margin-right"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="w3-overlay w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="w3-panel">
+        {% for category, message in messages %}
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom" id="flash-{{ loop.index }}" style="position: relative; top: 35px">
+                {{ message }}
+                <span onclick="dismissFlash(this.parentElement)" class="w3-button w3-right w3-hover-none" style="position: absolute; right: 0; top: 0; padding: 8px 16px;">&times;</span>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var flashMsg = document.getElementById('flash-{{ loop.index }}');
+                    if (flashMsg) {
+                        var opacity = 1;
+                        var fadeEffect = setInterval(function() {
+                            if (opacity > 0) {
+                                opacity -= 0.1;
+                                flashMsg.style.opacity = opacity;
+                            } else {
+                                clearInterval(fadeEffect);
+                                flashMsg.style.display = 'none';
+                            }
+                        }, 50);
+                    }
+                }, 5000);
+
+                function dismissFlash(element) {
+                    element.style.display = 'none';
+                }
+            </script>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Main Content -->
+<div class="w3-main" style="margin-top:46px">
+    <div class="w3-container w3-padding-32">
+        <div class="w3-row">
+            <div class="w3-col l8 m8 s12 w3-padding">
+                <h1><b>Account Settings</b></h1>
+                
+                <!-- Change Username Form -->
+                <div class="w3-card w3-white w3-round-large w3-padding w3-margin-bottom">
+                    <h3><i class="fas fa-user-edit w3-margin-right"></i> Change Username</h3>
+                    <form method="POST" action="/update_username">
+                        <div class="w3-section">
+                            <label><b>New Username</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="text" name="new_username" value="{{ username }}" required>
+                        </div>
+                        <div class="w3-section">
+                            <label><b>Confirm Password</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="password" name="password" required>
+                        </div>
+                        <button type="submit" class="w3-button w3-deep-purple w3-round-large">
+                            <i class="fas fa-save w3-margin-right"></i> Update Username
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Change Password Form -->
+                <div class="w3-card w3-white w3-round-large w3-padding w3-margin-bottom">
+                    <h3><i class="fas fa-key w3-margin-right"></i> Change Password</h3>
+                    <form method="POST" action="/update_password">
+                        <div class="w3-section">
+                            <label><b>Current Password</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="password" name="current_password" required>
+                        </div>
+                        <div class="w3-section">
+                            <label><b>New Password</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="password" name="new_password" required>
+                        </div>
+                        <div class="w3-section">
+                            <label><b>Confirm New Password</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="password" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="w3-button w3-deep-purple w3-round-large">
+                            <i class="fas fa-save w3-margin-right"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Danger Zone -->
+                <div class="w3-card w3-white w3-round-large w3-padding danger-zone">
+                    <h3 class="w3-text-red"><i class="fas fa-exclamation-triangle w3-margin-right"></i> Danger Zone</h3>
+                    <p class="w3-text-red">These actions are irreversible. Proceed with caution.</p>
+                    
+                    <!-- Delete Account Form -->
+                    <div class="w3-panel w3-pale-red w3-round-large w3-padding">
+                        <h4><b>Delete Account</b></h4>
+                        <p>This will permanently delete your account and all associated data.</p>
+                        <form method="POST" action="/delete_account" onsubmit="return confirmDelete()">
+                            <div class="w3-section">
+                                <label><b>Confirm Password</b></label>
+                                <input class="w3-input w3-border w3-round-large" type="password" name="password" required>
+                            </div>
+                            <button type="submit" class="w3-button w3-red w3-round-large">
+                                <i class="fas fa-trash-alt w3-margin-right"></i> Delete My Account
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Info -->
+            <div class="w3-col l4 m4 s12 w3-padding" style="margin-top: 75px;">
+                <div class="w3-card w3-white w3-round-large">
+                    <div class="w3-container w3-deep-purple w3-padding-16 w3-round-large">
+                        <h4><i class="fas fa-info-circle w3-margin-right"></i> Account Information</h4>
+                    </div>
+                    <div class="w3-container w3-padding-16">
+                        <p><i class="fas fa-envelope w3-margin-right"></i> <b>Email:</b> {{ email }}</p>
+                        <p><i class="fas fa-user-tag w3-margin-right"></i> <b>Role:</b> {{ role|capitalize }}</p>
+                        <p><i class="fas fa-calendar-alt w3-margin-right"></i> <b>Member Since:</b> {{ user.created_at|datetimeformat('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Scripts -->
+<script>
+    function w3_open() {
+        document.getElementById("mySidebar").style.display = "block";
+        document.getElementById("myOverlay").style.display = "block";
+    }
+
+    function w3_close() {
+        document.getElementById("mySidebar").style.display = "none";
+        document.getElementById("myOverlay").style.display = "none";
+    }
+    
+    function confirmDelete() {
+        return confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
+    }
+</script>
+
+</body>
+</html>

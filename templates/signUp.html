@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .signup-card {
+            max-width: 500px;
+            margin: 100px auto;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="w3-light-grey">
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="w3-panel">
+        {% for category, message in messages %}
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom"
+                 id="flash-{{ loop.index }}" style="position: relative;">
+                {{ message }}
+                <span onclick="dismissFlash(this.parentElement)"
+                      class="w3-button w3-right w3-hover-none"
+                      style="position: absolute; right: 0; top: 0; padding: 8px 16px;">
+                    &times;
+                </span>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var flashMsg = document.getElementById('flash-{{ loop.index }}');
+                    if (flashMsg) {
+                        var opacity = 1;
+                        var fadeEffect = setInterval(function() {
+                            if (opacity > 0) {
+                                opacity -= 0.1;
+                                flashMsg.style.opacity = opacity;
+                            } else {
+                                clearInterval(fadeEffect);
+                                flashMsg.style.display = 'none';
+                            }
+                        }, 50);
+                    }
+                }, 5000);
+
+                function dismissFlash(element) {
+                    element.style.display = 'none';
+                }
+            </script>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Sign Up Form -->
+<div class="w3-container w3-content w3-card w3-white w3-padding-large w3-round-xlarge signup-card">
+    <div class="w3-container w3-deep-purple w3-round-xlarge w3-padding-16">
+        <h2 class="w3-center"><i class="fas fa-user-plus w3-margin-right"></i>Sign Up</h2>
+    </div>
+
+    <form action="/signUp" method="POST" class="w3-container w3-padding-16">
+        <p>
+            <label><i class="fas fa-user w3-margin-right"></i>Username</label>
+            <input class="w3-input w3-border w3-round-large" type="text" name="username" required>
+        </p>
+        <p>
+            <label><i class="fas fa-envelope w3-margin-right"></i>Email</label>
+            <input class="w3-input w3-border w3-round-large" type="email" name="email" required>
+        </p>
+        <p>
+            <label><i class="fas fa-lock w3-margin-right"></i>Password</label>
+            <input class="w3-input w3-border w3-round-large" type="password" name="password"
+                   required pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}"
+                   title="Must contain at least one uppercase, one lowercase, one special character, and at least 8 characters.">
+        </p>
+        <p>
+            <label><i class="fas fa-lock w3-margin-right"></i>Confirm Password</label>
+            <input class="w3-input w3-border w3-round-large" type="password" name="confirm-password" required>
+        </p>
+        <p>
+            <label><i class="fas fa-user-tag w3-margin-right w3-margin-top"></i>Role</label>
+            <select class="w3-select w3-border w3-center w3-round-large w3-right w3-margin-bottom" style="max-width: 175px;" name="role" required>
+                <option value="" disabled selected>Select your role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+        </p>
+        <p>
+            <button class="w3-button w3-deep-purple w3-block w3-round-large">
+                <i class="fas fa-user-plus w3-margin-right"></i>Sign Up
+            </button>
+        </p>
+    </form>
+
+    <div class="w3-center w3-padding-16">
+        <a href="/login" class="w3-small w3-hover-text-deep-purple">
+            <i class="fas fa-sign-in-alt w3-margin-right"></i>Already have an account?
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

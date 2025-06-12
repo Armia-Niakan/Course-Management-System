@@ -1,0 +1,945 @@
+''' 1.log and administration 2. pish niaz 3.chand rooz dar hafteh'''
+
+from flask import Flask, render_template, request, redirect, url_for, json, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+import json
+import datetime
+import secrets
+import smtplib
+from email.mime.text import MIMEText
+from dataclasses import dataclass, asdict
+from typing import Dict, Optional, Tuple
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+COURSES_FILE = 'courses.json'
+ENROLLMENTS_FILE = 'enrollments.json'
+
+USER_DATA_FILE = 'users.json'
+TOKEN_DATA_FILE = 'reset_tokens.json'
+VALID_ROLES = {"student", "teacher"}
+
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+EMAIL_ADDRESS = 'armia.niakan@gmail.com'
+EMAIL_PASSWORD = 'kfbh sllm nzma qmgf'
+SMTP_USERNAME = 'armia.niakan@gmail.com'
+SMTP_PASSWORD = 'kfbh sllm nzma qmgf'
+APP_URL = 'http://localhost:5000'
+
+@dataclass
+class User:
+    email: str
+    username: str
+    password_hash: str
+    role: str
+    created_at: str
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        if not all(k in data for k in ("email", "username", "password_hash", "role", "created_at")):
+            raise ValueError("Missing required fields")
+            
+        if data["role"] not in VALID_ROLES:
+            raise ValueError(f"Invalid role. Must be one of: {VALID_ROLES}")        
+
+        return cls(
+            email=data.get('email'),
+            username=data.get('username'),
+            password_hash=data.get('password_hash'),
+            role=data.get('role'),
+            created_at=data.get('created_at'),
+        )
+    
+    def to_dict(self) -> Dict:
+        return asdict(self)
+    
+    def verify_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
+
+class UserManager:
+    @staticmethod
+    def load_users() -> Dict[str, User]:
+        try:
+            with open(USER_DATA_FILE, 'r') as f:
+                users_data = json.load(f)
+                return {email: User.from_dict(data) for email, data in users_data.items()}
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+    
+    @staticmethod
+    def save_users(users: Dict[str, User]):
+        users_data = {email: user.to_dict() for email, user in users.items()}
+        with open(USER_DATA_FILE, 'w') as f:
+            json.dump(users_data, f, indent=4)
+    
+    @staticmethod
+    def get_user(email: str) -> Optional[User]:
+        users = UserManager.load_users()
+        return users.get(email)
+    
+    @staticmethod
+    def add_user(user: User):
+        users = UserManager.load_users()
+        users[user.email] = user
+        UserManager.save_users(users)
+
+    @staticmethod
+    def update_user(email: str, **kwargs) -> bool:
+        users = UserManager.load_users()
+        if email not in users:
+            return False
+    
+        user = users[email]
+        allowed_fields = {'username', 'password_hash'} 
+    
+        updates_made = False
+        for key, value in kwargs.items():
+            if key in allowed_fields and hasattr(user, key):
+                setattr(user, key, value)
+                updates_made = True
+    
+        if updates_made:
+            UserManager.save_users(users)
+        return updates_made 
+    
+    @staticmethod
+    def email_exists(email: str) -> bool:
+        users = UserManager.load_users()
+        return email in users
+
+class TokenManager:
+    @staticmethod
+    def load_tokens() -> Dict[str, dict]:
+        try:
+            with open(TOKEN_DATA_FILE, 'r') as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+    
+    @staticmethod
+    def save_tokens(tokens: Dict[str, dict]):
+        with open(TOKEN_DATA_FILE, 'w') as f:
+            json.dump(tokens, f, indent=4)
+    
+    @staticmethod
+    def generate_token(email: str) -> str:
+        token = secrets.token_urlsafe(32)
+        tokens = TokenManager.load_tokens()
+        tokens[token] = {
+            'email': email,
+            'created_at': datetime.datetime.now().isoformat(),
+            'expires_at': (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat()
+        }
+        TokenManager.save_tokens(tokens)
+        return token
+    
+    @staticmethod
+    def validate_token(token: str) -> Tuple[bool, Optional[str]]:
+        tokens = TokenManager.load_tokens()
+        if token not in tokens:
+            return False, None
+        
+        token_data = tokens[token]
+        expires_at = datetime.datetime.fromisoformat(token_data['expires_at'])
+        
+        if datetime.datetime.now() > expires_at:
+            del tokens[token]
+            TokenManager.save_tokens(tokens)
+            return False, None
+        
+        return True, token_data['email']
+    
+    @staticmethod
+    def delete_token(token: str):
+        tokens = TokenManager.load_tokens()
+        if token in tokens:
+            del tokens[token]
+            TokenManager.save_tokens(tokens)
+
+def send_reset_email(email: str, token: str) -> bool:
+    reset_url = f"{APP_URL}/reset_password/{token}"
+    message = MIMEText(
+        f"""Hello,
+
+You requested a password reset for your account. Please click the following link to reset your password:
+{reset_url}
+
+This link will expire in 1 hour. If you didn't request this, please ignore this email."""
+    )
+
+    message['Subject'] = 'Password Reset Request'
+    message['From'] = EMAIL_ADDRESS
+    message['To'] = email
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_ADDRESS, email, message.as_string())
+        print("Email sent successfully!")
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+
+if not os.path.exists(USER_DATA_FILE):
+    UserManager.save_users({})
+
+if not os.path.exists(TOKEN_DATA_FILE):
+    TokenManager.save_tokens({})
+
+@dataclass
+class Course:
+    id: str
+    name: str
+    teacher: str
+    teacher_name :str
+    day: str
+    time: str
+    duration: int
+    max_students: int
+    current_students: int = 0
+
+@dataclass
+class Enrollment:
+    student_email: str
+    course_id: str
+
+class CourseManager:
+    @staticmethod
+    def load_courses():
+        try:
+            with open(COURSES_FILE, 'r') as f:
+                courses_data = json.load(f)
+                for course_id, course in courses_data.items():
+                    if 'current_students' not in course:
+                        course['current_students'] = 0
+                return courses_data
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+        
+    @staticmethod
+    def increment_students(course_id):
+        courses = CourseManager.load_courses()
+        if course_id in courses:
+            courses[course_id]['current_students'] += 1
+            CourseManager.save_courses(courses)
+            return True
+        return False
+
+    @staticmethod
+    def decrement_students(course_id):
+        courses = CourseManager.load_courses()
+        if course_id in courses and courses[course_id]['current_students'] > 0:
+            courses[course_id]['current_students'] -= 1
+            CourseManager.save_courses(courses)
+            return True
+        return False
+        
+    @staticmethod
+    def save_courses(courses):
+        with open(COURSES_FILE, 'w') as f:
+            json.dump(courses, f, indent=4)
+
+    @staticmethod
+    def get_course(course_id):
+        courses = CourseManager.load_courses()
+        return courses.get(course_id)
+
+class EnrollmentManager:
+    @staticmethod
+    def load_enrollments():
+        try:
+            with open(ENROLLMENTS_FILE, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+                return []
+        except (FileNotFoundError, json.JSONDecodeError):
+            return []
+
+    @staticmethod
+    def save_enrollments(enrollments):
+        with open(ENROLLMENTS_FILE, 'w') as f:
+            json.dump(enrollments, f, indent=4)
+
+    @staticmethod
+    def get_student_enrollments(student_email):
+        enrollments = EnrollmentManager.load_enrollments()
+        return [e for e in enrollments if e['student_email'] == student_email]
+    
+    @staticmethod
+    def get_course_enrollments(course_id):
+        enrollments = EnrollmentManager.load_enrollments()
+        return [e for e in enrollments if e['course_id'] == course_id]
+
+if not os.path.exists(COURSES_FILE):
+    CourseManager.save_courses({})
+if not os.path.exists(ENROLLMENTS_FILE):
+    EnrollmentManager.save_enrollments([])
+
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%B %d, %Y'):
+    try:
+        dt = datetime.datetime.fromisoformat(value)
+        return dt.strftime(format)
+    except Exception:
+        return value
+    
+@app.route("/")
+@app.route("/about")
+def about():
+    return render_template('about.html')
+
+@app.route("/signUp", methods=['GET', 'POST'])
+def signup_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm-password')
+        role = request.form.get('role')
+        
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return redirect(url_for('signup_page'))
+
+        if UserManager.email_exists(email):
+            flash("Email already registered", "error")
+            return redirect(url_for('signup_page'))
+
+        hashed_password = generate_password_hash(password)
+        new_user = User(
+            email=email,
+            username=username,
+            password_hash=hashed_password,
+            role=role,
+            created_at=datetime.datetime.now().isoformat()
+        )
+        
+        UserManager.add_user(new_user)
+        flash("Account created successfully! Please log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('signUp.html')
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        role = request.form.get('role')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = UserManager.get_user(email)
+        
+        if not user:
+            flash("Invalid email or password", "error")
+            return redirect(url_for('login'))
+
+        if user.role != role:
+            flash("Invalid role for this account", "error")
+            return redirect(url_for('login'))
+
+        if user.verify_password(password):
+            session['user_email'] = email
+            session['username'] = user.username
+            session['role'] = user.role
+            flash(f"Welcome back, {user.username}!", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Invalid email or password", "error")
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
+
+@app.route("/forgot_password", methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        
+        if not UserManager.email_exists(email):
+            flash("If an account with that email exists, we've sent a reset link", "info")
+            return redirect(url_for('login'))
+        
+        token = TokenManager.generate_token(email)
+        if send_reset_email(email, token):
+            flash("Password reset link has been sent to your email", "success")
+        else:
+            flash("Failed to send reset email. Please try again later.", "error")
+        
+        return redirect(url_for('login'))
+    
+    return render_template('forgot_password.html')
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_password(token):
+    valid, email = TokenManager.validate_token(token)
+    
+    if not valid:
+        flash("Invalid or expired token", "error")
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return redirect(url_for('reset_password', token=token))
+        
+        hashed_password = generate_password_hash(password)
+        UserManager.update_user(email, password_hash=hashed_password)
+        TokenManager.delete_token(token)
+        
+        flash("Password updated successfully! Please login with your new password.", "success")
+        return redirect(url_for('login'))
+    
+    return render_template('reset_password.html', token=token)
+
+@app.route("/dashboard")
+def dashboard():
+    if 'user_email' not in session:
+        flash("You have to login first", "error")
+        return redirect(url_for('login'))
+    
+    user_email = session['user_email']
+    role = session['role']
+    username = session.get('username')
+
+    days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    today = (datetime.datetime.now().weekday() + 2) % 7
+    current_day = days[today]
+    next_day = days[(today + 1) % 7]
+
+
+    now = datetime.datetime.now()
+    current_time = now.time()
+
+    # Load all courses once at the beginning
+    all_courses = CourseManager.load_courses()
+
+    if role == 'student':
+        enrollments = EnrollmentManager.get_student_enrollments(user_email)
+        courses = [all_courses.get(e['course_id']) for e in enrollments]
+        courses = [c for c in courses if c]  # Filter out None values
+        
+        # Calculate total hours for student
+        total_hours = sum(course['duration'] for course in courses if course)
+    else:
+        # Teacher section - use all_courses that was loaded above
+        courses = [c for c in all_courses.values() if c['teacher'] == user_email]
+        
+        # Calculate total students for teacher
+        total_students = 0
+        total_hours = 0
+        for course in courses:
+            enrollments = EnrollmentManager.get_course_enrollments(course['id'])
+            student_count = len(enrollments)
+            course['student_count'] = student_count  # Add student_count here
+            total_students += student_count
+            total_hours += course.get('duration', 0)
+
+    ongoing_classes = []
+    today_upcoming_classes = []
+    tomorrow_classes = []
+    
+    for course in courses:
+        if course and course['day'] == current_day:
+            try:
+                course_time = datetime.datetime.strptime(course['time'], "%H:%M").time()
+                end_time = (datetime.datetime.combine(now.date(), course_time) + 
+                           datetime.timedelta(hours=course['duration']))
+                end_time = end_time.time()
+                
+                if course_time <= current_time < end_time:
+                    ongoing_classes.append(course)
+                elif current_time < course_time:
+                    today_upcoming_classes.append(course)
+            except ValueError:
+                continue
+        elif course and course['day'] == next_day:
+            tomorrow_classes.append(course)
+    
+    # Sort all sections by time
+    ongoing_classes.sort(key=lambda x: x['time'])
+    today_upcoming_classes.sort(key=lambda x: x['time'])
+    tomorrow_classes.sort(key=lambda x: x['time'])
+
+    return render_template('dashboard.html',
+                         role=role,
+                         username=username,
+                         ongoing_classes=ongoing_classes,
+                         today_upcoming_classes=today_upcoming_classes,
+                         tomorrow_classes=tomorrow_classes,
+                         current_day=current_day,
+                         next_day=next_day,
+                         total_hours=total_hours,
+                         enrollments=enrollments if role == 'student' else None,
+                         courses_teaching=courses if role == 'teacher' else None,
+                         total_students=total_students if role == 'teacher' else None)
+    
+
+@app.route("/courses")
+def courses():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    role = session['role']
+    user_email = session['user_email']
+    all_courses = list(CourseManager.load_courses().values())
+
+    # Filters
+    day_filter = request.args.get('day')
+    time_filter = request.args.get('time')
+    only_my_courses = request.args.get('only_my_courses') == 'on'
+    only_enrolled = request.args.get('only_enrolled') == 'on'
+    not_enrolled = request.args.get('not_enrolled') == 'on'
+
+    # Initial filtered list
+    filtered_courses = all_courses
+
+    # Apply Day filter
+    if day_filter:
+        filtered_courses = [c for c in filtered_courses if c['day'] == day_filter]
+
+    # Apply Time filter
+    if time_filter:
+        filtered_courses = [c for c in filtered_courses if is_time_in_range(c['time'], time_filter)]
+
+    # Enrollment info
+    enrolled_course_ids = []
+    if role == 'student':
+        enrollments = EnrollmentManager.get_student_enrollments(user_email)
+        enrolled_course_ids = [e['course_id'] for e in enrollments]
+
+        if only_enrolled:
+            filtered_courses = [c for c in filtered_courses if c['id'] in enrolled_course_ids]
+        elif not_enrolled:
+            filtered_courses = [c for c in filtered_courses if c['id'] not in enrolled_course_ids]
+
+    elif role == 'teacher' and only_my_courses:
+        filtered_courses = [c for c in filtered_courses if c['teacher'] == user_email]
+
+    return render_template('courses.html',
+                         role=role,
+                         username=session.get('username'),
+                         courses=filtered_courses,
+                         enrolled_course_ids=enrolled_course_ids)
+
+
+@app.route("/courses/create", methods=['GET', 'POST'])
+def create_course():
+    if 'user_email' not in session or session['role'] != 'teacher':
+        flash("Unauthorized", "error")
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        course_id = str(len(CourseManager.load_courses()) + 1)
+        new_course = {
+            'id': course_id,
+            'name': request.form.get('name'),
+            'teacher': session['user_email'],
+            'teacher_name': session['username'], 
+            'day': request.form.get('day'),
+            'time': request.form.get('time'),
+            'duration': int(request.form.get('duration')),
+            'max_students': int(request.form.get('max_students')),
+            'current_students': 0
+        }
+        
+        courses = CourseManager.load_courses()
+        courses[course_id] = new_course
+        CourseManager.save_courses(courses)
+        
+        flash("Course created successfully!", "success")
+        return redirect(url_for('courses'))
+    
+    return render_template('create_course.html',
+                         role=session['role'],
+                         username=session.get('username'))
+
+@app.route("/course/<course_name>")
+def course_detail(course_name):
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    courses = CourseManager.load_courses()
+    course = None
+    for c in courses.values():
+        if c['name'].lower().replace(' ', '-') == course_name.lower():
+            course = c
+            break
+    
+    if not course:
+        flash("Course not found", "error")
+        return redirect(url_for('courses'))
+    
+    role = session['role']
+    user_email = session['user_email']
+    is_enrolled = False
+    students = []
+    is_teacher_of_course = False
+    
+    if role == "teacher":
+        is_teacher_of_course = (course['teacher'] == user_email)
+    
+    if role == 'student':
+        enrollments = EnrollmentManager.get_student_enrollments(user_email)
+        is_enrolled = any(e['course_id'] == course['id'] for e in enrollments)
+    elif is_teacher_of_course:
+        enrollments = EnrollmentManager.get_course_enrollments(course['id'])
+        students = []
+        for e in enrollments:
+            user = UserManager.get_user(e['student_email'])
+            if user:
+                students.append(user)
+    
+    is_full = course['current_students'] >= course['max_students']
+    
+    return render_template('course_detail.html',
+                         course=course,
+                         role=role,
+                         username=session.get('username'),
+                         is_enrolled=is_enrolled,
+                         is_full=is_full,
+                         students=students,
+                         is_teacher_of_course=is_teacher_of_course)
+
+@app.route('/remove_student', methods=['POST'])
+def remove_student():
+    if 'user_email' not in session or session.get('role') != 'teacher':
+        flash("Unauthorized", "error")
+        return redirect(url_for('login'))
+    
+    course_id = request.form.get('course_id')
+    student_email = request.form.get('student_email')
+    course_name = request.form.get('course_name')
+    
+    # Verify the teacher owns this course
+    course = CourseManager.get_course(course_id)
+    if not course or course['teacher'] != session['user_email']:
+        flash("Unauthorized - You don't teach this course", "error")
+        return redirect(url_for('courses'))
+    
+    # Your removal logic here
+    enrollments = EnrollmentManager.load_enrollments()
+    enrollments = [e for e in enrollments if not (e['course_id'] == course_id and e['student_email'] == student_email)]
+    EnrollmentManager.save_enrollments(enrollments)
+    
+    CourseManager.decrement_students(course_id)
+    
+    flash("Student removed successfully", "success")
+    return redirect(url_for('course_detail',
+                         course_name=course_name))
+
+@app.route('/delete_course', methods=['POST'])
+def delete_course():
+    if 'user_email' not in session or session['role'] != 'teacher':
+        flash("Unauthorized", "error")
+        return redirect(url_for('login'))
+    
+    course_id = request.form.get('course_id')
+    
+    # Verify the teacher owns this course
+    course = CourseManager.get_course(course_id)
+    if not course or course['teacher'] != session['user_email']:
+        flash("Unauthorized - You don't teach this course", "error")
+        return redirect(url_for('courses'))
+    
+    # Remove course from courses
+    courses = CourseManager.load_courses()
+    if course_id in courses:
+        del courses[course_id]
+        CourseManager.save_courses(courses)
+    
+    # Remove all enrollments for this course
+    enrollments = EnrollmentManager.load_enrollments()
+    enrollments = [e for e in enrollments if e['course_id'] != course_id]
+    EnrollmentManager.save_enrollments(enrollments)
+    
+    flash("Course deleted successfully", "success")
+    return redirect(url_for('courses'))
+
+@app.route("/enroll", methods=['POST'])
+def enroll_course():
+    if 'user_email' not in session or session['role'] != 'student':
+        flash("Unauthorized", "error")
+        return redirect(url_for('login'))
+    
+    course_id = request.form.get('course_id')
+    course = CourseManager.get_course(course_id)
+    enrollments = EnrollmentManager.load_enrollments()
+    
+    if course['current_students'] >= course['max_students']:
+        flash("This course is already full", "error")
+        return redirect(url_for('courses'))
+    
+    enrollments = EnrollmentManager.load_enrollments()
+
+    if any(e['student_email'] == session['user_email'] and e['course_id'] == course_id for e in enrollments):
+        flash("You are already enrolled in this course", "error")
+        return redirect(url_for('courses'))
+    
+    course = CourseManager.get_course(course_id)
+    student_courses = EnrollmentManager.get_student_enrollments(session['user_email'])
+    
+    for enrolled in student_courses:
+        enrolled_course = CourseManager.get_course(enrolled['course_id'])
+        if are_courses_conflicting(enrolled_course, course):
+            flash("This course conflicts with another course you're enrolled in", "error")
+            return redirect(url_for('courses'))
+    
+    enrollments.append({'student_email': session['user_email'], 'course_id': course_id})
+    EnrollmentManager.save_enrollments(enrollments)
+    CourseManager.increment_students(course_id)
+    
+    flash("Successfully enrolled in the course!", "success")
+    return redirect(url_for('courses'))
+
+@app.route("/unenroll", methods=['POST'])
+def unenroll_course():
+    if 'user_email' not in session or session['role'] != 'student':
+        flash("Unauthorized", "error")
+        return redirect(url_for('login'))
+    
+    course_id = request.form.get('course_id')
+    enrollments = EnrollmentManager.load_enrollments()
+    enrollments = [e for e in enrollments if not (e['student_email'] == session['user_email'] and e['course_id'] == course_id)]
+    EnrollmentManager.save_enrollments(enrollments)
+    CourseManager.decrement_students(course_id)
+    
+    flash("Successfully unenrolled from the course", "success")
+    return redirect(url_for('courses'))
+
+def is_time_in_range(time_str, time_range):
+    hour = int(time_str.split(':')[0])
+    if time_range == 'morning':
+        return 8 <= hour < 12
+    elif time_range == 'afternoon':
+        return 12 <= hour < 17
+    elif time_range == 'evening':
+        return 17 <= hour < 21
+    return False
+
+@app.route("/calendar")
+def calendar():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    user_email = session['user_email']
+    role = session['role']
+    
+    if role == 'student':
+        enrollments = EnrollmentManager.get_student_enrollments(user_email)
+        courses = [CourseManager.get_course(e['course_id']) for e in enrollments if CourseManager.get_course(e['course_id'])]
+    else:
+        all_courses = CourseManager.load_courses()
+        courses = [c for c in all_courses.values() if c['teacher'] == session['user_email']]
+        
+        enrollments = EnrollmentManager.load_enrollments()
+        enrollment_counts = {}
+        for e in enrollments:
+            enrollment_counts[e['course_id']] = enrollment_counts.get(e['course_id'], 0) + 1
+        
+        for course in courses:
+            course['student_count'] = enrollment_counts.get(course['id'], 0)
+
+    days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    calendar_data = {day: [] for day in days}
+    
+    for course in courses:
+        if course and course['day'] in calendar_data:
+            calendar_data[course['day']].append(course)
+    
+    for day in calendar_data:
+        calendar_data[day].sort(key=lambda x: x['time'])
+    
+    return render_template('calendar.html', 
+                         calendar_data=calendar_data, 
+                         role=role,
+                         username=session.get('username'))
+
+@app.route("/profile")
+def profile():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+
+    email = session['user_email']
+    role = session['role']
+    username = session['username']
+    user = UserManager.get_user(email)
+
+    enrollments = None
+    courses_teaching = None
+
+    if role == "student":
+        enrollments = EnrollmentManager.get_student_enrollments(email)
+    elif role == "teacher":
+        all_courses = CourseManager.load_courses()
+        courses_teaching = [course for course in all_courses.values() if course['teacher'] == email]
+
+    return render_template('profile.html',
+                           email=email,
+                           role=role,
+                           username=username,
+                           user=user,
+                           enrollments=enrollments,
+                           courses_teaching=courses_teaching)
+
+@app.route("/settings")
+def settings():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    email = session['user_email']
+    role = session['role']
+    username = session['username']
+    user = UserManager.get_user(email)
+    
+    return render_template('settings.html', 
+                         email=email,
+                         role=role,
+                         username=username,
+                         user=user)
+
+@app.route("/update_username", methods=['POST'])
+def update_username():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    new_username = request.form.get('new_username')
+    password = request.form.get('password')
+    user_email = session['user_email']
+    
+    user = UserManager.get_user(user_email)
+    if not user or not user.verify_password(password):
+        flash("Incorrect password", "error")
+        return redirect(url_for('settings'))
+    
+    if UserManager.update_user(user_email, username=new_username):
+        session['username'] = new_username
+        flash("Username updated successfully!", "success")
+    else:
+        flash("Failed to update username", "error")
+    
+    return redirect(url_for('settings'))
+
+@app.route("/update_password", methods=['POST'])
+def update_password():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    user_email = session['user_email']
+    
+    if new_password != confirm_password:
+        flash("New passwords do not match", "error")
+        return redirect(url_for('settings'))
+    
+    user = UserManager.get_user(user_email)
+    if not user or not user.verify_password(current_password):
+        flash("Current password is incorrect", "error")
+        return redirect(url_for('settings'))
+    
+    hashed_password = generate_password_hash(new_password)
+    if UserManager.update_user(user_email, password_hash=hashed_password):
+        flash("Password updated successfully!", "success")
+    else:
+        flash("Failed to update password", "error")
+    
+    return redirect(url_for('settings'))
+
+@app.route("/delete_account", methods=['POST'])
+def delete_account():
+    if 'user_email' not in session:
+        flash("You need to login first", "error")
+        return redirect(url_for('login'))
+    
+    password = request.form.get('password')
+    user_email = session['user_email']
+    
+    user = UserManager.get_user(user_email)
+    if not user or not user.verify_password(password):
+        flash("Incorrect password", "error")
+        return redirect(url_for('settings'))
+    
+    # Delete user's enrollments if they're a student
+    if session['role'] == 'student':
+        enrollments = EnrollmentManager.load_enrollments()
+        enrollments = [e for e in enrollments if e['student_email'] != user_email]
+        EnrollmentManager.save_enrollments(enrollments)
+        
+        # Decrement student counts in courses
+        for enrollment in enrollments:
+            CourseManager.decrement_students(enrollment['course_id'])
+    
+    # Delete courses if they're a teacher
+    if session['role'] == 'teacher':
+        courses = CourseManager.load_courses()
+        # Find all course IDs taught by this teacher
+        teacher_course_ids = [course_id for course_id, course in courses.items() if course['teacher'] == user_email]
+        
+        # Delete these courses
+        for course_id in teacher_course_ids:
+            del courses[course_id]
+        
+        CourseManager.save_courses(courses)
+        
+        # Delete enrollments for these courses
+        enrollments = EnrollmentManager.load_enrollments()
+        enrollments = [e for e in enrollments if e['course_id'] not in teacher_course_ids]
+        EnrollmentManager.save_enrollments(enrollments)
+    
+    # Delete the user
+    users = UserManager.load_users()
+    if user_email in users:
+        del users[user_email]
+        UserManager.save_users(users)
+    
+    # Clear session and logout
+    session.clear()
+    flash("Your account has been permanently deleted", "success")
+    return redirect(url_for('login'))
+
+@app.route("/logout")
+def logout():
+    session.pop('user_email', None)
+    session.pop('username', None)
+    session.pop('role', None)
+    flash("You have been logged out", "success")
+    return redirect(url_for('login'))
+
+@app.route('/api/courses', methods=['GET'])
+def get_courses_api():
+    courses = CourseManager.load_courses()
+    return json.dumps(list(courses.values()))
+
+def are_courses_conflicting(course1, course2):
+    if course1['day'] != course2['day']:
+        return False
+
+    def time_to_minutes(time_str):
+        h, m = map(int, time_str.split(':'))
+        return h * 60 + m
+
+    start1 = time_to_minutes(course1['time'])
+    end1 = start1 + int(course1['duration'] * 60)
+
+    start2 = time_to_minutes(course2['time'])
+    end2 = start2 + int(course2['duration'] * 60)
+
+    return not (end1 <= start2 or end2 <= start1)
+
+if __name__ == '__main__':
+    app.run(debug=True)
