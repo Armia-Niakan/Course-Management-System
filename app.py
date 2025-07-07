@@ -1,6 +1,6 @@
-''' 1.log and administration 2. pish niaz 3.chand rooz dar hafteh'''
+'''1.host 2. pish niaz 3.chand rooz dar hafteh'''
 
-from flask import Flask, render_template, request, redirect, url_for, json, session, flash
+from flask import Flask, render_template, request, redirect, url_for, json, jsonify, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
@@ -10,6 +10,9 @@ import smtplib
 from email.mime.text import MIMEText
 from dataclasses import dataclass, asdict
 from typing import Dict, Optional, Tuple
+import logging
+from logging.handlers import RotatingFileHandler
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -19,7 +22,7 @@ ENROLLMENTS_FILE = 'enrollments.json'
 
 USER_DATA_FILE = 'users.json'
 TOKEN_DATA_FILE = 'reset_tokens.json'
-VALID_ROLES = {"student", "teacher"}
+VALID_ROLES = {"student", "teacher", "admin"}
 
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
@@ -28,6 +31,15 @@ EMAIL_PASSWORD = 'kfbh sllm nzma qmgf'
 SMTP_USERNAME = 'armia.niakan@gmail.com'
 SMTP_PASSWORD = 'kfbh sllm nzma qmgf'
 APP_URL = 'http://localhost:5000'
+
+LOG_FILE = 'app.log'
+handler = RotatingFileHandler(LOG_FILE, maxBytes=10000, backupCount=3)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
 
 @dataclass
 class User:
@@ -105,6 +117,16 @@ class UserManager:
             UserManager.save_users(users)
         return updates_made 
     
+    @staticmethod
+    def delete_user(email: str) -> bool:
+        users = UserManager.load_users()
+        if email not in users:
+            return False
+    
+        del users[email]
+        UserManager.save_users(users)
+        return True
+
     @staticmethod
     def email_exists(email: str) -> bool:
         users = UserManager.load_users()
@@ -267,6 +289,20 @@ class EnrollmentManager:
             json.dump(enrollments, f, indent=4)
 
     @staticmethod
+    def delete_enrollment(student_email: str, course_id: str) -> bool:
+        enrollments = EnrollmentManager.load_enrollments()
+        initial_count = len(enrollments)
+        
+        # Filter out the enrollment to delete
+        enrollments = [e for e in enrollments 
+                      if not (e['student_email'] == student_email and e['course_id'] == course_id)]
+        
+        if len(enrollments) < initial_count:
+            EnrollmentManager.save_enrollments(enrollments)
+            return True
+        return False
+
+    @staticmethod
     def get_student_enrollments(student_email):
         enrollments = EnrollmentManager.load_enrollments()
         return [e for e in enrollments if e['student_email'] == student_email]
@@ -289,6 +325,17 @@ def datetimeformat(value, format='%B %d, %Y'):
     except Exception:
         return value
     
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'role' not in session or session['role'] != 'admin':
+            flash("Unauthorized - Admin access required", "error")
+            app.logger.warning(f"Unauthorized admin access attempt by {session.get('email', 'unknown')}")
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+    
 @app.route("/")
 @app.route("/about")
 def about():
@@ -301,14 +348,15 @@ def signup_page():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm-password')
-        role = request.form.get('role')
-        
+        role = request.form.get('role')  
+
         if password != confirm_password:
             flash("Passwords do not match", "error")
             return redirect(url_for('signup_page'))
 
         if UserManager.email_exists(email):
             flash("Email already registered", "error")
+            app.logger.warning(f"Failed sign up attempt for email: {email} ({email} already exist) ")
             return redirect(url_for('signup_page'))
 
         hashed_password = generate_password_hash(password)
@@ -322,9 +370,11 @@ def signup_page():
         
         UserManager.add_user(new_user)
         flash("Account created successfully! Please log in.", "success")
+        app.logger.info(f"New {role} account created: {email}")
         return redirect(url_for('login'))
 
     return render_template('signUp.html')
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -337,10 +387,12 @@ def login():
         
         if not user:
             flash("Invalid email or password", "error")
+            app.logger.warning(f"Failed login attempt for email: {email}")
             return redirect(url_for('login'))
 
         if user.role != role:
             flash("Invalid role for this account", "error")
+            app.logger.warning(f"Role mismatch for {email} (expected {role}, actual {user.role})")
             return redirect(url_for('login'))
 
         if user.verify_password(password):
@@ -348,9 +400,11 @@ def login():
             session['username'] = user.username
             session['role'] = user.role
             flash(f"Welcome back, {user.username}!", "success")
+            app.logger.info(f"User {email} logged in successfully")
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password", "error")
+            app.logger.warning(f"Failed login attempt for email: {email}")
             return redirect(url_for('login'))
 
     return render_template('login.html')
@@ -361,15 +415,17 @@ def forgot_password():
         email = request.form.get('email')
         
         if not UserManager.email_exists(email):
-            flash("If an account with that email exists, we've sent a reset link", "info")
+            flash("There is no account with this email")
             return redirect(url_for('login'))
         
         token = TokenManager.generate_token(email)
         if send_reset_email(email, token):
             flash("Password reset link has been sent to your email", "success")
+            app.logger.info(f"Password reset link has been sent to {email}")
         else:
             flash("Failed to send reset email. Please try again later.", "error")
-        
+            app.logger.warning(f"Failed to send password reset link for email: {email}")
+
         return redirect(url_for('login'))
     
     return render_template('forgot_password.html')
@@ -395,6 +451,7 @@ def reset_password(token):
         TokenManager.delete_token(token)
         
         flash("Password updated successfully! Please login with your new password.", "success")
+        app.logger.info(f"Password for user {email} has changed successfully")
         return redirect(url_for('login'))
     
     return render_template('reset_password.html', token=token)
@@ -940,6 +997,236 @@ def are_courses_conflicting(course1, course2):
     end2 = start2 + int(course2['duration'] * 60)
 
     return not (end1 <= start2 or end2 <= start1)
+
+from flask import request, redirect, render_template, session, flash, url_for
+
+@app.route("/admin/login", methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        user = UserManager.get_user(email)
+
+        if not user or user.role != 'admin':
+            flash("Invalid admin credentials", "error")
+            app.logger.warning(f"Admin login failed for {email}")
+            return redirect(url_for('admin_login'))
+
+        if user.verify_password(password):
+            session['user_email'] = email
+            session['username'] = user.username
+            session['role'] = user.role
+            flash(f"Welcome back, Admin {user.username}!", "success")
+            app.logger.info(f"Admin {email} logged in successfully")
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash("Invalid admin credentials", "error")
+            app.logger.warning(f"Admin login failed for {email}")
+            return redirect(url_for('admin_login'))
+
+    return render_template('admin_login.html')
+
+
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    users = UserManager.load_users()
+    courses = CourseManager.load_courses()
+    enrollments = EnrollmentManager.load_enrollments()
+    
+    # Statistics
+    total_users = len(users)
+    total_courses = len(courses)
+    total_enrollments = len(enrollments)
+    
+    # Recent activity (last 5 users)
+    recent_users = sorted(users.values(), 
+                         key=lambda u: u.created_at, 
+                         reverse=True)[:5]
+    
+    return render_template('admin_dashboard.html',
+                         total_users=total_users,
+                         total_courses=total_courses,
+                         total_enrollments=total_enrollments,
+                         recent_users=recent_users,
+                         username=session.get('username'))
+@app.route("/admin/users")
+@admin_required
+def admin_users():
+    users = UserManager.load_users()
+    return render_template('admin_users.html',
+                         users=users.values(),
+                         username=session.get('username'))
+
+@app.route("/admin/courses")
+@admin_required
+def admin_courses():
+    courses = CourseManager.load_courses()
+    users = UserManager.load_users()
+    
+    # Prepare course data with teacher names
+    course_list = []
+    for course_id, course in courses.items():
+        teacher = users.get(course['teacher'])
+        course_data = {
+            'id': course_id,
+            'name': course['name'],
+            'teacher': course['teacher'],
+            'teacher_name': teacher.username if teacher else 'Unknown',
+            'day': course['day'],
+            'time': course['time'],
+            'duration': course['duration'],
+            'max_students': course['max_students'],
+            'current_students': course.get('current_students', 0)
+        }
+        course_list.append(course_data)
+    
+    return render_template('admin_courses.html',
+                         courses=course_list,
+                         username=session.get('username'))
+
+@app.route("/admin/enrollments")
+@admin_required
+def admin_enrollments():
+    enrollments = EnrollmentManager.load_enrollments()
+    courses = CourseManager.load_courses()
+    users = UserManager.load_users()
+    
+    # Enhance enrollment data with names
+    enhanced_enrollments = []
+    for e in enrollments:
+        course = courses.get(e['course_id'])
+        user = users.get(e['student_email'])
+        if course and user:
+            teacher = users.get(course['teacher'])
+            enhanced_enrollments.append({
+                'course_name': course['name'],
+                'student_name': user.username,  # Access username directly from User object
+                'teacher_name': teacher.username if teacher else 'Unknown',
+                'day': course['day'],
+                'time': course['time'],
+                'student_email': e['student_email'],
+                'course_id': e['course_id']
+            })
+    
+    return render_template('admin_enrollments.html',
+                         enrollments=enhanced_enrollments,
+                         username=session.get('username'))
+
+@app.route("/admin/logs")
+@admin_required
+def admin_logs():
+    try:
+        with open(LOG_FILE, 'r') as f:
+            logs = f.readlines()
+        logs = [log.strip() for log in logs][-200:]  # Get last 200 lines
+    except FileNotFoundError:
+        logs = ["No log file found"]
+    
+    return render_template('admin_logs.html',
+                         logs=reversed(logs), 
+                         username=session.get('username'))
+
+@app.route("/admin/delete_user", methods=['POST'])
+@admin_required
+def admin_delete_user():
+    email = request.form.get('email')
+    if not email:
+        flash("No email provided", "error")
+        return redirect(url_for('admin_users'))
+    
+    if email == session.get('user_email'):
+        flash("You cannot delete your own account from here", "error")
+        return redirect(url_for('admin_users'))
+    
+    if UserManager.delete_user(email):
+        # Also delete enrollments for this user
+        enrollments = EnrollmentManager.load_enrollments()
+        enrollments = [e for e in enrollments if e['student_email'] != email]
+        EnrollmentManager.save_enrollments(enrollments)
+        
+        flash(f"User {email} deleted successfully", "success")
+        app.logger.info(f"User {email} deleted by admin {session.get('user_email')}")
+    else:
+        flash("User not found", "error")
+    
+    return redirect(url_for('admin_users'))
+
+@app.route("/admin/delete_course", methods=['POST'])
+@admin_required
+def admin_delete_course():
+    course_id = request.form.get('course_id')
+    if not course_id:
+        flash("No course ID provided", "error")
+        return redirect(url_for('admin_courses'))
+    
+    courses = CourseManager.load_courses()
+    if course_id not in courses:
+        flash("Course not found", "error")
+        return redirect(url_for('admin_courses'))
+    
+    # Delete the course
+    del courses[course_id]
+    CourseManager.save_courses(courses)
+    
+    # Delete enrollments for this course
+    enrollments = EnrollmentManager.load_enrollments()
+    enrollments = [e for e in enrollments if e['course_id'] != course_id]
+    EnrollmentManager.save_enrollments(enrollments)
+    
+    flash("Course deleted successfully", "success")
+    app.logger.info(f"Course {course_id} deleted by admin {session.get('user_email')}")
+    return redirect(url_for('admin_courses'))
+
+@app.route("/admin/delete_enrollment", methods=['POST'])
+@admin_required
+def admin_delete_enrollment():
+    student_email = request.form.get('student_email')
+    course_id = request.form.get('course_id')
+    
+    if not student_email or not course_id:
+        flash("Missing student email or course ID", "error")
+        return redirect(url_for('admin_enrollments'))
+    
+    if EnrollmentManager.delete_enrollment(student_email, course_id):
+        # Decrement student count in course
+        CourseManager.decrement_students(course_id)
+        flash("Enrollment deleted successfully", "success")
+        app.logger.info(f"Enrollment deleted: student {student_email} from course {course_id} by admin {session.get('user_email')}")
+    else:
+        flash("Enrollment not found", "error")
+    
+    return redirect(url_for('admin_enrollments'))
+
+@app.route("/admin/clear_logs", methods=['POST'])
+@admin_required
+def admin_clear_logs():
+    try:
+        # Clear the log file
+        with open(LOG_FILE, 'w') as f:
+            f.write('')
+        
+        # Also clear the log handler
+        for handler in app.logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                handler.close()
+                app.logger.removeHandler(handler)
+        
+        # Re-add the handler to continue logging
+        handler = RotatingFileHandler(LOG_FILE, maxBytes=10000, backupCount=3)
+        handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        app.logger.addHandler(handler)
+        
+        flash("Logs cleared successfully", "success")
+        app.logger.info("Logs cleared by admin")
+        return jsonify({"success": True})
+    except Exception as e:
+        app.logger.error(f"Failed to clear logs: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
