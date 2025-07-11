@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .w3-hover-rounded:hover {
@@ -137,7 +138,7 @@
                             {{ total_students if total_students else '0' }}
                         </span>
                     </p>
-                    <p><i class="fas fa-clock w3-text-orange w3-margin-left"></i> Hours per Week: 
+                    <p><i class="fas fa-clock w3-text-orange w3-margin-left"></i> Total Teaching Hours: 
                         <span class="w3-badge w3-orange w3-right w3-margin-right">
                             {{ total_hours if total_hours else '0' }}
                         </span>
@@ -148,104 +149,136 @@
     </div>
 
     <!-- Ongoing Classes -->
-    <div class="w3-container w3-padding-16">
-        <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
-            <h2 class="w3-text-deep-purple"><i class="fas fa-chalkboard-teacher w3-margin-right"></i> Ongoing Classes</h2>
-            {% if ongoing_classes %}
-                <div class="w3-row-padding">
-                    {% for course in ongoing_classes %}
-                        <div class="w3-col m4 w3-margin-bottom">
-                            <div class="w3-card w3-pale-green w3-round-large w3-padding w3-dashboard-card">
-                                <h3><b>{{ course.name }}</b></h3>
-                                <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.time }}</p>
-                                {% if role == 'student' %}
-                                    <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
-                                {% else %}
-                                    <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
+<div class="w3-container w3-padding-16">
+    <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
+        <h2 class="w3-text-deep-purple">
+            <i class="fas fa-chalkboard-teacher w3-margin-right"></i> 
+            Ongoing Classes
+            <span class="w3-small w3-opacity">{{ "2025-07-11 10:11:47" | datetimeformat }}</span>
+        </h2>
+        {% if ongoing_classes %}
+            <div class="w3-row-padding">
+                {% for course in ongoing_classes %}
+                    <div class="w3-col m4 w3-margin-bottom">
+                        <div class="w3-card w3-pale-green w3-round-large w3-padding w3-dashboard-card">
+                            <h3><b>{{ course.name }}</b></h3>
+                            {% for schedule in course.schedule %}
+                                {% if schedule == current_schedule %}
+                                    <div class="w3-panel w3-round w3-light-green">
+                                        <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ schedule.time }}</p>
+                                        <p><i class="fas fa-calendar-day w3-text-deep-purple"></i> {{ schedule.day }}</p>
+                                        <p><i class="fas fa-hourglass w3-text-deep-purple"></i> {{ schedule.duration }} hour session</p>
+                                        <span class="w3-tag w3-green w3-round">Current Session</span>
+                                    </div>
                                 {% endif %}
-                                <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.duration }} hour session</p>
-                                <div class="w3-center">
-                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                            {% endfor %}
+                            {% if role == 'student' %}
+                                <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
+                            {% else %}
+                                <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
+                            {% endif %}
+                            <div class="w3-center">
+                                <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                                    <i class="fas fa-book-open w3-margin-right"></i>View Course
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="w3-panel w3-pale-yellow w3-round-large">
+                <p><i class="fas fa-info-circle"></i> No classes are currently in session.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+    <!-- Today and Tomorrow Classes -->
+<div class="w3-container w3-padding-16">
+    <div class="w3-row">
+        <!-- Today's Classes -->
+        <div class="w3-half w3-padding">
+            <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
+                <h2 class="w3-text-deep-purple">
+                    <i class="fas fa-calendar-day w3-margin-right"></i> 
+                    Today's Classes ({{ current_day }})
+                </h2>
+                {% if today_upcoming_classes %}
+                    <div class="w3-horizontal-scroll">
+                        {% for course in today_upcoming_classes %}
+                            <div class="w3-card w3-white w3-round-large" style="width:280px">
+                                <div class="w3-container w3-padding">
+                                    <h3><b>{{ course.name }}</b></h3>
+                                    {% for schedule in course.schedule %}
+                                        {% if schedule.day == current_day %}
+                                            <div class="w3-panel w3-round w3-light-grey">
+                                                <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ schedule.time }}</p>
+                                                <p><i class="fas fa-hourglass w3-text-deep-purple"></i> {{ schedule.duration }} hour session</p>
+                                                {% if schedule == next_schedule %}
+                                                    <span class="w3-tag w3-blue w3-round">Next Session</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if role == 'student' %}
+                                        <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
+                                    {% else %}
+                                        <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
+                                    {% endif %}
+                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
                                         <i class="fas fa-book-open w3-margin-right"></i>View Course
                                     </a>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="w3-panel w3-pale-yellow w3-round-large">
-                    <p><i class="fas fa-info-circle"></i> No classes are currently in session.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Today and Tomorrow Classes -->
-    <div class="w3-container w3-padding-16">
-        <div class="w3-row">
-            <!-- Today's Classes -->
-            <div class="w3-half w3-padding">
-                <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
-                    <h2 class="w3-text-deep-purple"><i class="fas fa-calendar-day w3-margin-right"></i> Today's Classes</h2>
-                    {% if today_upcoming_classes %}
-                        <div class="w3-horizontal-scroll">
-                            {% for course in today_upcoming_classes %}
-                                <div class="w3-card w3-white w3-round-large" style="width:280px">
-                                    <div class="w3-container w3-padding">
-                                        <h3><b>{{ course.name }}</b></h3>
-                                            <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.time }}</p>
-                                            {% if role == 'student' %}
-                                                <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
-                                            {% else %}
-                                                <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
-                                            {% endif %}
-                                            <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.duration }} hour session</p>
-                                        <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
-                                            <i class="fas fa-book-open w3-margin-right"></i>View Course
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="w3-panel w3-pale-yellow w3-round-large">
-                            <p><i class="fas fa-check-circle"></i> No more classes scheduled for today.</p>
-                        </div>
-                    {% endif %}
-                </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="w3-panel w3-pale-yellow w3-round-large">
+                        <p><i class="fas fa-check-circle"></i> No more classes scheduled for today.</p>
+                    </div>
+                {% endif %}
             </div>
+        </div>
 
-            <!-- Tomorrow's Classes -->
-            <div class="w3-half w3-padding">
-                <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
-                    <h2 class="w3-text-deep-purple"><i class="fas fa-calendar-alt w3-margin-right"></i> Tomorrow's Classes</h2>
-                    {% if tomorrow_classes %}
-                        <div class="w3-horizontal-scroll">
-                            {% for course in tomorrow_classes %}
-                                <div class="w3-card w3-white w3-round-large" style="width:280px">
-                                    <div class="w3-container w3-padding">
-                                        <h3><b>{{ course.name }}</b></h3>
-                                            <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.time }}</p>
-                                            {% if role == 'student' %}
-                                                <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
-                                            {% else %}
-                                                <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
-                                            {% endif %}
-                                            <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ course.duration }} hour session</p>
-                                        <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
-                                            <i class="fas fa-book-open w3-margin-right"></i>View Course
-                                        </a>
-                                    </div>
+        <!-- Tomorrow's Classes -->
+        <div class="w3-half w3-padding">
+            <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
+                <h2 class="w3-text-deep-purple">
+                    <i class="fas fa-calendar-alt w3-margin-right"></i> 
+                    Tomorrow's Classes ({{ next_day }})
+                </h2>
+                {% if tomorrow_classes %}
+                    <div class="w3-horizontal-scroll">
+                        {% for course in tomorrow_classes %}
+                            <div class="w3-card w3-white w3-round-large" style="width:280px">
+                                <div class="w3-container w3-padding">
+                                    <h3><b>{{ course.name }}</b></h3>
+                                    {% for schedule in course.schedule %}
+                                        {% if schedule.day == next_day %}
+                                            <div class="w3-panel w3-round w3-light-grey">
+                                                <p><i class="fas fa-clock w3-text-deep-purple"></i> {{ schedule.time }}</p>
+                                                <p><i class="fas fa-hourglass w3-text-deep-purple"></i> {{ schedule.duration }} hour session</p>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if role == 'student' %}
+                                        <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}</p>
+                                    {% else %}
+                                        <p><i class="fas fa-users w3-text-deep-purple"></i> Students: {{ course.student_count }}/{{ course.max_students }}</p>
+                                    {% endif %}
+                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
+                                        <i class="fas fa-book-open w3-margin-right"></i>View Course
+                                    </a>
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="w3-panel w3-pale-yellow w3-round-large">
-                            <p><i class="fas fa-info-circle"></i> No classes scheduled for tomorrow.</p>
-                        </div>
-                    {% endif %}
-                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="w3-panel w3-pale-yellow w3-round-large">
+                        <p><i class="fas fa-info-circle"></i> No classes scheduled for tomorrow.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

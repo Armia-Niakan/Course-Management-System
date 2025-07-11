@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -92,17 +93,30 @@
                     <td>
                         {% if i < courses|length %}
                             {% set course = courses[i] %}
-                            <div class="w3-padding-small">
-                                <span class="w3-tag w3-round-xxlarge w3-deep-purple w3-medium w3-margin-bottom">{{ course.time }}</span><br>
-                                <strong>{{ course.name }}</strong><br>
-                                {% if role == 'student' %}
-                                    <span class="w3-small"><i class="fas fa-user-tie"></i> Teacher: {{ course.teacher_name }}</span><br>
-                                {% else %}
-                                    <span class="w3-small"><i class="fas fa-users"></i> Students: {{ course.student_count }}/{{ course.max_students }}</span><br>
-                                {% endif %}
-                                <p class="w3-small"><i class="fas fa-clock"></i> {{ course.duration }} hour(s)</p>
-                                <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small"> 
-                                <i class="fas fa-book-open"></i> Details</a>
+                            <div class="w3-card w3-white w3-round-large w3-margin-bottom">
+                                <div class="w3-container w3-padding-small">
+                                    <span class="w3-tag w3-round-xxlarge w3-deep-purple w3-medium w3-margin-bottom">
+                                        {{ course.time }}
+                                    </span><br>
+                                    <strong>{{ course.name }}</strong><br>
+                                    {% if role == 'student' %}
+                                        <span class="w3-small">
+                                            <i class="fas fa-user-tie"></i> 
+                                            Teacher: {{ course.teacher_name }}
+                                        </span><br>
+                                    {% else %}
+                                        <span class="w3-small">
+                                            <i class="fas fa-users"></i> 
+                                            Students: {{ course.student_count }}/{{ course.max_students }}
+                                        </span><br>
+                                    {% endif %}
+                                    <p class="w3-small">
+                                        <i class="fas fa-clock"></i> {{ course.duration }} hour(s)
+                                    </p>
+                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
+                                        <i class="fas fa-book-open"></i> Details
+                                    </a>
+                                </div>
                             </div>
                         {% else %}
                             <span class="w3-opacity w3-small">—</span>
