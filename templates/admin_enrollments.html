@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Enrollments</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .w3-hover-rounded:hover {
+            border-radius: 8px;
+        }
+        @media (max-width: 768px) {
+            .w3-col.l8, .w3-col.l4 {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="w3-light-grey">
+
+<!-- Top Navigation -->
+<div class="w3-top">
+    <div class="w3-bar w3-deep-purple w3-card">
+        <a href="/admin/dashboard" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="/admin/users" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-users"></i> Users
+        </a> 
+        <a href="/admin/courses" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-book"></i> Courses
+        </a>
+        <a href="/admin/enrollments" class="w3-bar-item w3-button w3-padding-large w3-white w3-round-large">
+            <i class="fas fa-link"></i> Enrollments
+        </a>
+        <a href="/admin/logs" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-clipboard-list"></i> Logs
+        </a>
+        <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+            <i class="fas fa-user-circle"></i> {{ username }}
+        </button>
+    </div>
+</div>
+
+<!-- Right Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-right" style="width:280px;right:0;display:none;z-index:3" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-right-align">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="w3-container w3-padding-16 w3-center">
+        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+        <span class="w3-tag w3-round w3-deep-purple">Admin</span>
+    </div>
+    <div class="w3-bar-block">
+        <a href="/profile" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-user w3-margin-right"></i> Profile
+        </a>
+        <a href="/settings" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-cog w3-margin-right"></i> Settings
+        </a>
+        <a href="/logout" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-sign-out-alt w3-margin-right"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="w3-overlay w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="w3-panel">
+        {% for category, message in messages %}
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom" id="flash-{{ loop.index }}" style="position: relative; top: 35px">
+                {{ message }}
+                <span onclick="dismissFlash(this.parentElement)" class="w3-button w3-right w3-hover-none" style="position: absolute; right: 0; top: 0; padding: 8px 16px;">&times;</span>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var flashMsg = document.getElementById('flash-{{ loop.index }}');
+                    if (flashMsg) {
+                        var opacity = 1;
+                        var fadeEffect = setInterval(function() {
+                            if (opacity > 0) {
+                                opacity -= 0.1;
+                                flashMsg.style.opacity = opacity;
+                            } else {
+                                clearInterval(fadeEffect);
+                                flashMsg.style.display = 'none';
+                            }
+                        }, 50);
+                    }
+                }, 5000);
+
+                function dismissFlash(element) {
+                    element.style.display = 'none';
+                }
+            </script>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Main Content -->
+<div class="w3-main" style="margin-top:46px;margin-right:0">
+    <div class="w3-row w3-padding-32 w3-margin-left w3-margin-right">
+        <!-- Page Header -->
+        <div class="w3-col l12">
+            <h1><b>Enrollment Management</b></h1>
+            <p class="w3-text-grey">Manage all course enrollments</p>
+        </div>
+
+        <!-- Enrollment Table -->
+        <div class="w3-container w3-padding-16">
+            <div class="w3-panel w3-light-grey w3-round-large w3-padding-16">
+                <div class="w3-bar w3-margin-bottom">
+                    <input type="text" class="w3-input w3-border w3-round-large w3-third" id="searchInput" onkeyup="searchTable()" placeholder="Search enrollments...">
+                </div>
+                <div class="w3-responsive">
+                    <table class="w3-table-all w3-hoverable" id="enrollmentTable">
+                        <thead>
+                            <tr class="w3-deep-purple">
+                                <th>Course</th>
+                                <th>Student</th>
+                                <th>Teacher</th>
+                                <th>Schedules</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enrollment in enrollments %}
+                            <tr>
+                                <td>{{ enrollment.course_name }}</td>
+                                <td>{{ enrollment.student_name }}</td>
+                                <td>{{ enrollment.teacher_name }}</td>
+                                <td>
+                                    {% for schedule in enrollment.schedule %}
+                                    <div class="w3-padding-small">
+                                        {{ schedule.day }} at {{ schedule.time }} ({{ schedule.duration }}h)
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <form action="/admin/delete_enrollment" method="post" onsubmit="return confirm('Are you sure you want to remove this enrollment?');">
+                                        <input type="hidden" name="student_email" value="{{ enrollment.student_email }}">
+                                        <input type="hidden" name="course_id" value="{{ enrollment.course_id }}">
+                                        <button type="submit" class="w3-button w3-red w3-round w3-small">
+                                            <i class="fas fa-unlink"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Scripts -->
+<script>
+    function w3_open() {
+        document.getElementById("mySidebar").style.display = "block";
+        document.getElementById("myOverlay").style.display = "block";
+    }
+
+    function w3_close() {
+        document.getElementById("mySidebar").style.display = "none";
+        document.getElementById("myOverlay").style.display = "none";
+    }
+
+    function searchTable() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("searchInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("enrollmentTable");
+        tr = table.getElementsByTagName("tr");
+        
+        for (i = 0; i < tr.length; i++) {
+            tdCourse = tr[i].getElementsByTagName("td")[0];
+            tdStudent = tr[i].getElementsByTagName("td")[1];
+            tdTeacher = tr[i].getElementsByTagName("td")[2];
+            if (tdCourse || tdStudent || tdTeacher) {
+                courseTxt = tdCourse.textContent || tdCourse.innerText;
+                studentTxt = tdStudent.textContent || tdStudent.innerText;
+                teacherTxt = tdTeacher.textContent || tdTeacher.innerText;
+                if (courseTxt.toUpperCase().indexOf(filter) > -1 || 
+                    studentTxt.toUpperCase().indexOf(filter) > -1 ||
+                    teacherTxt.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }       
+        }
+    }
+</script>
+
+</body>
+</html>

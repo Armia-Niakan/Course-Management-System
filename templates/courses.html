@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -184,12 +185,22 @@
                         <div class="w3-container w3-padding-16">
                             <div class="w3-row">
                                 <div class="w3-col m9">
-                                    <h3><b>{{ course.name }}</b></h3>
-                                    <p class="w3-text-grey">
-                                        <i class="fas fa-calendar-day w3-text-deep-purple"></i> {{ course.day }} at {{ course.time }} ({{ course.duration }} hrs)<br>
-                                        <i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course.teacher_name }}<br>
-                                        <i class="fas fa-users w3-text-deep-purple"></i> {{ course.current_students }}/{{ course.max_students }} students
-                                    </p>
+                                    <div class="w3-text-grey">
+                                        {% for schedule in course.schedule %}
+                                        <p>
+                                            <i class="fas fa-calendar-day w3-text-deep-purple"></i> 
+                                            {{ schedule.day }} at {{ schedule.time }} ({{ schedule.duration }} hrs)
+                                        </p>
+                                        {% endfor %}
+                                        <p>
+                                            <i class="fas fa-user-tie w3-text-deep-purple"></i> 
+                                            Teacher: {{ course.teacher_name }}
+                                        </p>
+                                        <p>
+                                            <i class="fas fa-users w3-text-deep-purple"></i> 
+                                            {{ course.current_students }}/{{ course.max_students }} students
+                                        </p>
+                                    </div>
                                 </div>
                                 <div class="w3-col m3 w3-center">
                                     {% if role == 'student' %}
