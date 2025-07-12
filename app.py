@@ -15,22 +15,21 @@ from functools import wraps
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
+
+VALID_ROLES = {"student", "teacher", "admin"}
+
 COURSES_FILE = 'courses.json'
 ENROLLMENTS_FILE = 'enrollments.json'
-
 USER_DATA_FILE = 'users.json'
 TOKEN_DATA_FILE = 'reset_tokens.json'
-VALID_ROLES = {"student", "teacher", "admin"}
+LOG_FILE = 'app.log'
 
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
-EMAIL_ADDRESS = 'armia.niakan@gmail.com'
-EMAIL_PASSWORD = 'kfbh sllm nzma qmgf'
-SMTP_USERNAME = 'armia.niakan@gmail.com'
-SMTP_PASSWORD = 'kfbh sllm nzma qmgf'
+EMAIL_ADDRESS = 'coursemanagementsystem1403@gmail.com'
+EMAIL_PASSWORD = 'natm cmet bspn gvci'
 APP_URL = 'http://localhost:5000'
 
-LOG_FILE = 'app.log'
 handler = RotatingFileHandler(LOG_FILE, maxBytes=10000, backupCount=3)
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
