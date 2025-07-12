@@ -91,7 +91,7 @@ class UserManager:
                 if not any(user.role == 'admin' for user in users.values()):
                     # Create default admin if none exists
                     default_admin = User(
-                        email="admin@exam.com",
+                        email="admin@example.com",
                         username="admin",
                         password_hash=generate_password_hash("74578126"),
                         role="admin",
