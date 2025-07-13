@@ -1,4 +1,4 @@
-#Course Management System
+# Course Management System
 
 A comprehensive Course Management System developed with Python Flask for Guilan University's Advanced Programming course.
 
