@@ -48,9 +48,36 @@ A comprehensive Course Management System built with Python Flask that allows stu
 - Responsive design
 - Font Awesome icons
 
+## Requirements
+- Python 3.6+
+- Flask 3.1.0: Install via pip install flask
+- Werkzeug 3.1.3
+  ```bash
+  pip install -r requirements.txt
+
 ## Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/course-management-system.git
+   git clone https://github.com/armia05/course-management-system.git
    cd course-management-system
+2. Install requirements
+
+3. Run the application:
+   ```bash
+   python app.py
+4. Access the system at http://localhost:5000
+
+## Default Admin Credentials
+Email: admin@example.com
+
+Password: 74578126
+
+## Project Structure
+
+## License
+None
+
+## Contact
+Armia Niakan
+armia.niakan@gmail.com
