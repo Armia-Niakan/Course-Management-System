@@ -71,7 +71,7 @@ A comprehensive Course Management System built with Python Flask that allows stu
 ## Default Admin Credentials
 Email: admin@example.com
 
-Password: 74578126
+Password: 123456789
 
 ## Project Structure
 
