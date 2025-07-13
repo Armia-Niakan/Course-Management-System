@@ -1,112 +1,121 @@
-# Course Management System
+Course Management System
+https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
+https://img.shields.io/badge/flask-%2523000.svg?style=for-the-badge&logo=flask&logoColor=white
+https://img.shields.io/badge/html5-%2523E34F26.svg?style=for-the-badge&logo=html5&logoColor=white
+https://img.shields.io/badge/css3-%25231572B6.svg?style=for-the-badge&logo=css3&logoColor=white
 
-A comprehensive Course Management System developed with Python Flask for Guilan University's Advanced Programming course.
+A comprehensive Course Management System built with Python Flask that allows students, teachers, and administrators to manage courses, enrollments, and schedules.
 
 Features
-User Authentication
+User Management
+Three user roles: Student, Teacher, Admin
 
-Secure login/signup with password hashing
+Secure password hashing with Werkzeug
 
-Role-based access (Student, Teacher, Admin)
+Password reset functionality via email
 
-Password reset via email
+Profile management (username/password updates)
 
 Course Management
-
 Create/edit/delete courses
 
-Schedule classes with time/day/duration
+Schedule management with day/time/duration
 
-Set maximum student capacity
+Conflict detection for overlapping schedules
 
-Student Features
+Enrollment capacity limits
 
-Enroll/unenroll in courses
+Dashboard Features
+Today's schedule view
 
-View class schedule
+Upcoming classes
 
-Check course availability
+Weekly calendar view
 
-Teacher Features
+Course statistics
 
-Manage created courses
+Admin Features
+User management (view/delete users)
 
-View enrolled students
+Course management
 
-Monitor class schedules
+Enrollment management
 
-Admin Dashboard
+System logs viewer
 
-User management
-
-Course oversight
-
-Enrollment tracking
-
-System logs
-
-Technologies
+Technical Details
 Backend
-
 Python 3
 
-Flask framework
+Flask web framework
 
-JSON data storage
+JSON-based data storage
 
 SMTP email integration
 
-Frontend
+Comprehensive logging system
 
+Frontend
 HTML5
 
 W3.CSS framework
 
+Responsive design
+
 Font Awesome icons
-
-Other
-
-Werkzeug security
-
-Logging system
-
-Dataclasses
 
 Installation
 Clone the repository:
 
-
-git clone https://github.com/armia05/course-management-system.git
+bash
+git clone https://github.com/yourusername/course-management-system.git
 cd course-management-system
 Install dependencies:
 
-Requirements
+bash
+pip install -r requirements.txt
+Configure environment:
 
+Set up email credentials in app.py (SMTP_SERVER, EMAIL_ADDRESS, etc.)
 
-python
-SMTP_SERVER = 'your.smtp.server'
-EMAIL_ADDRESS = 'your@email.com'
-EMAIL_PASSWORD = 'yourpassword'
+Configure any other settings as needed
+
 Run the application:
 
-Usage
-Console mode:
-
-Run the project in console mode by executing: python registration_system.py
-
-Run the project in web mode by executing: python registration_system.py web and then open your browser and navigate the local host: http://127.0.0.1:5000
+bash
+python app.py
+Access the system at http://localhost:5000
 
 Default Admin Credentials
 Email: admin@example.com
 
-Password: 74578126
+Password: 123456789
 
 Project Structure
+text
+course-management-system/
+├── app.py                # Main application file
+├── static/               # Static files (CSS, JS)
+├── templates/            # HTML templates
+│   ├── about.html        # About page
+│   ├── admin/            # Admin templates
+│   ├── auth/             # Authentication templates
+│   └── ...               # Other templates
+├── *.json                # Data storage files
+└── README.md             # This file
+Screenshots
+https://screenshots/dashboard.png
+Dashboard view for teachers
+
+https://screenshots/courses.png
+Course management interface
+
+https://screenshots/calendar.png
+Weekly calendar view
 
 License
-None
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 Contact
-For questions or support, please contact:
-
-Armia Niakan - armia.niakan@gmail.com
+Armia Niakan
+armia.niakan@gmail.com
