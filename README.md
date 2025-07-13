@@ -59,8 +59,8 @@ A comprehensive Course Management System built with Python Flask that allows stu
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Armia05/Course-Management-System
-   cd course-management-system
+   git clone https://github.com/Armia-Niakan/Course-Management-System.git
+   cd Course-Management-System
 2. Install requirements
 
 3. Run the application:
