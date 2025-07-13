@@ -122,21 +122,29 @@
             <div class="w3-row">
                 <div class="w3-twothird">
                     <h1><b>{{ course.name }}</b></h1>
-                    <p class="w3-large">Taught by {{ course.teacher_name }}</p>
+                    <p class="w3-large">Taught by {{ course.teacher_name }} </p>
                 </div>
                 <div class="w3-third w3-right-align">
-                    <span class="w3-tag w3-round w3-{{ 'red' if is_full else 'green' }} w3-large">
-                        {{ course.current_students }}/{{ course.max_students }} Students
-                    </span>
-                    <p class="w3-margin-top">
-                        <i class="fas fa-calendar-day w3-text-deep-purple"></i> {{ course.day }} at {{ course.time }}
+                <span class="w3-tag w3-round w3-{{ 'red' if is_full else 'green' }} w3-large">
+                    {{ course.current_students }}/{{ course.max_students }} Students
+                </span>
+                <div class="w3-margin-top">
+                    <p>
+                        <i class="fas fa-clock w3-text-deep-purple"></i> 
+                        {{ hours_per_week }} hours/week
+                    </p>
+                    <p>
+                    <i class="fas fa-calendar-day w3-text-deep-purple"></i> 
+                        {% for schedule in sorted_schedules %}
+                            {{ schedule.day }} at {{ schedule.time }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
                     </p>
                 </div>
+            </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="w3-container">
         <div class="w3-row-padding">
             <!-- Left Column - Course Details -->

@@ -103,7 +103,6 @@
     {% endif %}
 {% endwith %}
 
-<!-- Main Content -->
 <div class="w3-main" style="margin-top:46px">
     <header class="w3-container w3-padding-32 w3-center">
                 <h1><b>All Courses</b></h1>
@@ -117,7 +116,6 @@
         </div>
     </header>
 
-    <!-- Filter and Course List -->
     <div class="w3-container">
         <div class="w3-row-padding">
             <!-- Filter Panel -->
@@ -185,6 +183,12 @@
                         <div class="w3-container w3-padding-16">
                             <div class="w3-row">
                                 <div class="w3-col m9">
+                                    <div>
+                                        <p>
+                                            <i class="fas fa-book w3-text-deep-purple"></i> 
+                                            <b> Course name: {{ course.name }}</b>
+                                        </p>
+                                    </div>
                                     <div class="w3-text-grey">
                                         {% for schedule in course.schedule %}
                                         <p>
@@ -212,7 +216,7 @@
                                                     <i class="fas fa-times"></i> Unenroll
                                                 </button>
                                                 <div class="w3-padding-small">
-                                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                                                    <a href="/course/{{ course.id }}" class="w3-button w3-deep-purple w3-round-large">
                                                         <i class="fas fa-book-open w3-margin-right"></i>View Course
                                                     </a>
                                                 </div>
@@ -225,7 +229,7 @@
                                                         <i class="fas fa-plus"></i> Enroll
                                                     </button>
                                                     <div class="w3-padding-small">
-                                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                                                    <a href="/course/{{ course.id }}" class="w3-button w3-deep-purple w3-round-large">
                                                         <i class="fas fa-book-open w3-margin-right"></i>View Course
                                                     </a>
                                                 </div>
@@ -236,11 +240,11 @@
                                         {% endif %}
                                     {% else %}
                                         {% if course.teacher_name == username %}
-                                        <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                                        <a href="/course/{{ course.id }}" class="w3-button w3-deep-purple w3-round-large">
                                             <i class="fas fa-cog"></i> Manage
                                         </a>
                                         {% else %}
-                                        <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large">
+                                        <a href="/course/{{ course.id }}" class="w3-button w3-deep-purple w3-round-large">
                                             <i class="fas fa-book-open w3-margin-right"></i>View Course
                                         </a>
                                         {% endif %}

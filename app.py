@@ -86,10 +86,8 @@ class UserManager:
             with open(USER_DATA_FILE, 'r') as f:
                 users_data = json.load(f)
                 users = {email: User.from_dict(data) for email, data in users_data.items()}
-                
-                # Check if any admin exists
+
                 if not any(user.role == 'admin' for user in users.values()):
-                    # Create default admin if none exists
                     default_admin = User(
                         email="admin@example.com",
                         username="admin",
@@ -105,7 +103,6 @@ class UserManager:
                 return users
                 
         except (FileNotFoundError, json.JSONDecodeError):
-            # If file doesn't exist or is invalid, create with default admin
             default_admin = User(
                 email="admin@example.com",
                 username="admin",
@@ -330,7 +327,6 @@ class EnrollmentManager:
         enrollments = EnrollmentManager.load_enrollments()
         initial_count = len(enrollments)
         
-        # Filter out the enrollment to delete
         enrollments = [e for e in enrollments 
                       if not (e['student_email'] == student_email and e['course_id'] == course_id)]
         
@@ -507,32 +503,28 @@ def dashboard():
     username = session.get('username')
 
     days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    today = (datetime.datetime.now().weekday() + 2) % 7
+    today = (datetime.datetime.now().weekday()+ 2) % 7
     current_day = days[today]
     next_day = days[(today + 1) % 7]
 
     now = datetime.datetime.now()
     current_time = now.time()
 
-    # Load all courses once at the beginning
     all_courses = CourseManager.load_courses()
 
     if role == 'student':
         enrollments = EnrollmentManager.get_student_enrollments(user_email)
         courses = [all_courses.get(e['course_id']) for e in enrollments]
-        courses = [c for c in courses if c]  # Filter out None values
+        courses = [c for c in courses if c]
         
-        # Calculate total hours for student
         total_hours = sum(
             schedule['duration'] 
             for course in courses 
             for schedule in course['schedule']
         )
     else:
-        # Teacher section
         courses = [c for c in all_courses.values() if c['teacher'] == user_email]
         
-        # Calculate total students and hours for teacher
         total_students = 0
         total_hours = 0
         for course in courses:
@@ -556,7 +548,6 @@ def dashboard():
                                   datetime.timedelta(hours=schedule['duration']))
                         end_time = end_time.time()
                         
-                        # Create a course entry with specific schedule
                         course_entry = course.copy()
                         course_entry['time'] = schedule['time']
                         course_entry['duration'] = schedule['duration']
@@ -573,12 +564,15 @@ def dashboard():
                     course_entry['duration'] = schedule['duration']
                     tomorrow_classes.append(course_entry)
     
-    # Sort all sections by time
     ongoing_classes.sort(key=lambda x: x['time'])
     today_upcoming_classes.sort(key=lambda x: x['time'])
     tomorrow_classes.sort(key=lambda x: x['time'])
 
+    current_datetime = datetime.datetime.now()
+    formatted_date = current_datetime.strftime("%B %d %H:%M")
+
     return render_template('dashboard.html',
+                         today=formatted_date,
                          role=role,
                          username=username,
                          ongoing_classes=ongoing_classes,
@@ -602,24 +596,20 @@ def courses():
     user_email = session['user_email']
     all_courses = list(CourseManager.load_courses().values())
 
-    # Filters
     day_filter = request.args.get('day')
     time_filter = request.args.get('time')
     only_my_courses = request.args.get('only_my_courses') == 'on'
     only_enrolled = request.args.get('only_enrolled') == 'on'
     not_enrolled = request.args.get('not_enrolled') == 'on'
 
-    # Initial filtered list
     filtered_courses = all_courses
 
-    # Apply Day filter
     if day_filter:
         filtered_courses = [
             c for c in filtered_courses 
             if any(schedule['day'] == day_filter for schedule in c['schedule'])
         ]
 
-    # Apply Time filter
     if time_filter:
         filtered_courses = [
             c for c in filtered_courses 
@@ -627,7 +617,6 @@ def courses():
                   for schedule in c['schedule'])
         ]
 
-    # Enrollment info
     enrolled_course_ids = []
     if role == 'student':
         enrollments = EnrollmentManager.get_student_enrollments(user_email)
@@ -655,19 +644,16 @@ def create_course():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        # Load existing courses first
         courses = CourseManager.load_courses()
         course_id = str(len(courses) + 1)
         
-        # Get days, times and durations as lists
         days = request.form.getlist('day[]')
         times = request.form.getlist('time[]')
         durations = request.form.getlist('duration[]')
         
-        # Create schedule list
         schedule = []
         for i in range(len(days)):
-            if days[i] and times[i] and durations[i]:  # Ensure all fields are present
+            if days[i] and times[i] and durations[i]:
                 schedule.append({
                     'day': days[i],
                     'time': times[i],
@@ -684,7 +670,6 @@ def create_course():
             'current_students': 0
         }
 
-        # Check for conflicts with teacher's existing courses
         teacher_courses = [c for c in courses.values() if c['teacher'] == session['user_email']]
         
         for existing_course in teacher_courses:
@@ -692,7 +677,6 @@ def create_course():
                 flash(f"This schedule conflicts with your course '{existing_course['name']}'", "error")
                 return redirect(url_for('create_course'))
         
-        # If no conflicts, save the new course
         courses[course_id] = new_course
         CourseManager.save_courses(courses)
         
@@ -700,7 +684,6 @@ def create_course():
         app.logger.info(f"New course created by {session['user_email']}: {new_course['name']}")
         return redirect(url_for('courses'))
     
-    # For GET request, show existing schedules
     existing_courses = CourseManager.load_courses()
     teacher_courses = [c for c in existing_courses.values() if c['teacher'] == session['user_email']]
     
@@ -709,8 +692,8 @@ def create_course():
                          username=session.get('username'),
                          teacher_courses=teacher_courses)
 
-@app.route("/course/<course_name>")
-def course_detail(course_name):
+@app.route("/course/<course_id>")
+def course_detail(course_id):
     if 'user_email' not in session:
         flash("You need to login first", "error")
         return redirect(url_for('login'))
@@ -718,7 +701,7 @@ def course_detail(course_name):
     courses = CourseManager.load_courses()
     course = None
     for c in courses.values():
-        if c['name'].lower().replace(' ', '-') == course_name.lower():
+        if c['id'] == course_id:
             course = c
             break
     
@@ -732,34 +715,34 @@ def course_detail(course_name):
     students = []
     is_teacher_of_course = False
     
-    # Calculate total hours per week
     total_hours = sum(schedule['duration'] for schedule in course['schedule'])
     
-    # Sort schedules by day and time
     days_order = {
-        'Saturday': 0, 'Sunday': 1, 'Monday': 2, 
-        'Tuesday': 3, 'Wednesday': 4, 'Thursday': 5, 'Friday': 6
+        'Saturday': 0, 'Sunday': 1,'Monday': 2, 'Tuesday': 3, 'Wednesday': 4,
+        'Thursday': 5, 'Friday': 6
     }
+    
+
     sorted_schedules = sorted(
         course['schedule'], 
         key=lambda x: (days_order[x['day']], x['time'])
     )
     
-    # Get current schedule if any
     now = datetime.datetime.now()
-    current_day = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][
-        (now.weekday() + 2) % 7
-    ]
+    current_weekday =(datetime.datetime.now().weekday()+ 2) % 7
+    current_day_name = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][current_weekday]
     current_time = now.time()
+
     current_schedule = None
     next_schedule = None
     
+
     for schedule in sorted_schedules:
-        if schedule['day'] == current_day:
-            schedule_time = datetime.datetime.strptime(schedule['time'], "%H:%M").time()
-            end_time = (datetime.datetime.combine(now.date(), schedule_time) + 
-                       datetime.timedelta(hours=schedule['duration'])).time()
-            
+        schedule_time = datetime.datetime.strptime(schedule['time'], "%H:%M").time()
+        end_time = (datetime.datetime.combine(now.date(), schedule_time) + 
+                  datetime.timedelta(hours=schedule['duration'])).time()
+        
+        if schedule['day'] == current_day_name:
             if schedule_time <= current_time <= end_time:
                 current_schedule = schedule
                 break
@@ -767,18 +750,29 @@ def course_detail(course_name):
                 if not next_schedule:
                     next_schedule = schedule
     
-    if not current_schedule and not next_schedule:
-        # Look for next schedule in coming days
-        found_today = False
-        for schedule in sorted_schedules:
-            if not found_today and schedule['day'] == current_day:
-                found_today = True
-                continue
-            if found_today or days_order[schedule['day']] > days_order[current_day]:
-                next_schedule = schedule
-                break
-        if not next_schedule and sorted_schedules:  # If we reached end of week, take first schedule
-            next_schedule = sorted_schedules[0]
+
+    if not current_schedule:
+
+        if not next_schedule:
+            for schedule in sorted_schedules:
+                if schedule['day'] == current_day_name:
+                    schedule_time = datetime.datetime.strptime(schedule['time'], "%H:%M").time()
+                    if current_time < schedule_time:
+                        next_schedule = schedule
+                        break
+        
+
+        if not next_schedule:
+            current_day_index = days_order[current_day_name]
+
+            for schedule in sorted_schedules:
+                if days_order[schedule['day']] > current_day_index:
+                    next_schedule = schedule
+                    break
+            
+
+            if not next_schedule and sorted_schedules:
+                next_schedule = sorted_schedules[0]
     
     if role == "teacher":
         is_teacher_of_course = (course['teacher'] == user_email)
@@ -795,7 +789,9 @@ def course_detail(course_name):
                 students.append(user)
     
     is_full = course['current_students'] >= course['max_students']
-    
+
+    hours_per_week = sum(schedule['duration'] for schedule in course['schedule'])
+
     return render_template('course_detail.html',
                          course=course,
                          role=role,
@@ -804,11 +800,12 @@ def course_detail(course_name):
                          is_full=is_full,
                          students=students,
                          is_teacher_of_course=is_teacher_of_course,
+                         hours_per_week=hours_per_week, 
                          total_hours=total_hours,
                          sorted_schedules=sorted_schedules,
                          current_schedule=current_schedule,
                          next_schedule=next_schedule,
-                         current_day=current_day)
+                         current_day=current_day_name)
 
 @app.route('/remove_student', methods=['POST'])
 def remove_student():
@@ -820,13 +817,11 @@ def remove_student():
     student_email = request.form.get('student_email')
     course_name = request.form.get('course_name')
     
-    # Verify the teacher owns this course
     course = CourseManager.get_course(course_id)
     if not course or course['teacher'] != session['user_email']:
         flash("Unauthorized - You don't teach this course", "error")
         return redirect(url_for('courses'))
     
-    # Your removal logic here
     enrollments = EnrollmentManager.load_enrollments()
     enrollments = [e for e in enrollments if not (e['course_id'] == course_id and e['student_email'] == student_email)]
     EnrollmentManager.save_enrollments(enrollments)
@@ -838,6 +833,7 @@ def remove_student():
     return redirect(url_for('course_detail',
                          course_name=course_name))
 
+
 @app.route('/delete_course', methods=['POST'])
 def delete_course():
     if 'user_email' not in session or session['role'] != 'teacher':
@@ -846,19 +842,16 @@ def delete_course():
     
     course_id = request.form.get('course_id')
     
-    # Verify the teacher owns this course
     course = CourseManager.get_course(course_id)
     if not course or course['teacher'] != session['user_email']:
         flash("Unauthorized - You don't teach this course", "error")
         return redirect(url_for('courses'))
     
-    # Remove course from courses
     courses = CourseManager.load_courses()
     if course_id in courses:
         del courses[course_id]
         CourseManager.save_courses(courses)
     
-    # Remove all enrollments for this course
     enrollments = EnrollmentManager.load_enrollments()
     enrollments = [e for e in enrollments if e['course_id'] != course_id]
     EnrollmentManager.save_enrollments(enrollments)
@@ -866,6 +859,7 @@ def delete_course():
     flash("Course deleted successfully", "success")
     app.logger.info(f"{session['user_email']} deleted course {course_id}")
     return redirect(url_for('courses'))
+
 
 @app.route("/enroll", methods=['POST'])
 def enroll_course():
@@ -962,7 +956,6 @@ def calendar():
             for schedule in course['schedule']:
                 day = schedule['day']
                 if day in calendar_data:
-                    # Create a copy of course data with specific schedule
                     course_entry = course.copy()
                     course_entry['time'] = schedule['time']
                     course_entry['duration'] = schedule['duration']
@@ -975,6 +968,7 @@ def calendar():
                          calendar_data=calendar_data, 
                          role=role,
                          username=session.get('username'))
+
 
 @app.route("/profile")
 def profile():
@@ -1089,40 +1083,32 @@ def delete_account():
         flash("Incorrect password", "error")
         return redirect(url_for('settings'))
     
-    # Delete user's enrollments if they're a student
     if session['role'] == 'student':
         enrollments = EnrollmentManager.load_enrollments()
         enrollments = [e for e in enrollments if e['student_email'] != user_email]
         EnrollmentManager.save_enrollments(enrollments)
         
-        # Decrement student counts in courses
         for enrollment in enrollments:
             CourseManager.decrement_students(enrollment['course_id'])
     
-    # Delete courses if they're a teacher
     if session['role'] == 'teacher':
         courses = CourseManager.load_courses()
-        # Find all course IDs taught by this teacher
         teacher_course_ids = [course_id for course_id, course in courses.items() if course['teacher'] == user_email]
         
-        # Delete these courses
         for course_id in teacher_course_ids:
             del courses[course_id]
         
         CourseManager.save_courses(courses)
         
-        # Delete enrollments for these courses
         enrollments = EnrollmentManager.load_enrollments()
         enrollments = [e for e in enrollments if e['course_id'] not in teacher_course_ids]
         EnrollmentManager.save_enrollments(enrollments)
     
-    # Delete the user
     users = UserManager.load_users()
     if user_email in users:
         del users[user_email]
         UserManager.save_users(users)
     
-    # Clear session and logout
     session.clear()
     flash("Your account has been permanently deleted", "success")
     app.logger.info(f"Account deleted: {user_email}")
@@ -1148,7 +1134,6 @@ def are_courses_conflicting(course1, course2):
         h, m = map(int, time_str.split(':'))
         return h * 60 + m
 
-    # Check each schedule combination for conflicts
     for schedule1 in course1['schedule']:
         for schedule2 in course2['schedule']:
             if schedule1['day'] != schedule2['day']:
@@ -1201,12 +1186,10 @@ def admin_dashboard():
     courses = CourseManager.load_courses()
     enrollments = EnrollmentManager.load_enrollments()
     
-    # Statistics
     total_users = len(users)
     total_courses = len(courses)
     total_enrollments = len(enrollments)
     
-    # Recent activity (last 5 users)
     recent_users = sorted(users.values(), 
                          key=lambda u: u.created_at, 
                          reverse=True)[:5]
@@ -1235,7 +1218,6 @@ def admin_courses():
     for course_id, course in courses.items():
         teacher = users.get(course['teacher'])
         
-        # Calculate total hours per week
         total_hours = sum(schedule['duration'] for schedule in course['schedule'])
         
         course_data = {
@@ -1286,7 +1268,7 @@ def admin_logs():
     try:
         with open(LOG_FILE, 'r') as f:
             logs = f.readlines()
-        logs = [log.strip() for log in logs][-200:]  # Get last 200 lines
+        logs = [log.strip() for log in logs][-200:]
     except FileNotFoundError:
         logs = ["No log file found"]
     
@@ -1307,7 +1289,6 @@ def admin_delete_user():
         return redirect(url_for('admin_users'))
     
     if UserManager.delete_user(email):
-        # Also delete enrollments for this user
         enrollments = EnrollmentManager.load_enrollments()
         enrollments = [e for e in enrollments if e['student_email'] != email]
         EnrollmentManager.save_enrollments(enrollments)
@@ -1332,11 +1313,9 @@ def admin_delete_course():
         flash("Course not found", "error")
         return redirect(url_for('admin_courses'))
     
-    # Delete the course
     del courses[course_id]
     CourseManager.save_courses(courses)
     
-    # Delete enrollments for this course
     enrollments = EnrollmentManager.load_enrollments()
     enrollments = [e for e in enrollments if e['course_id'] != course_id]
     EnrollmentManager.save_enrollments(enrollments)
@@ -1356,7 +1335,6 @@ def admin_delete_enrollment():
         return redirect(url_for('admin_enrollments'))
     
     if EnrollmentManager.delete_enrollment(student_email, course_id):
-        # Decrement student count in course
         CourseManager.decrement_students(course_id)
         flash("Enrollment deleted successfully", "success")
         app.logger.info(f"Enrollment deleted: student {student_email} from course {course_id} by admin {session.get('user_email')}")
@@ -1369,17 +1347,14 @@ def admin_delete_enrollment():
 @admin_required
 def admin_clear_logs():
     try:
-        # Clear the log file
         with open(LOG_FILE, 'w') as f:
             f.write('')
         
-        # Also clear the log handler
         for handler in app.logger.handlers:
             if isinstance(handler, logging.FileHandler):
                 handler.close()
                 app.logger.removeHandler(handler)
         
-        # Re-add the handler to continue logging
         handler = RotatingFileHandler(LOG_FILE, maxBytes=10000, backupCount=3)
         handler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
