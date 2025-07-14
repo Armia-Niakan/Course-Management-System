@@ -5,81 +5,72 @@
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 
-A comprehensive Course Management System built with Python Flask that allows students, teachers, and administrators to manage courses, enrollments, and schedules.
+A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, and schedules.
 
-## Features
+## Key Features
 
-### User Management
-- **Three user roles**: Student, Teacher, Admin
-- Secure password hashing with Werkzeug
-- Password reset functionality via email
-- Profile management (username/password updates)
+#### User & Role Management
+- **Three User Roles**: Student, Teacher, and Admin with distinct permissions.
+- **Secure Authentication**: Secure password hashing using Werkzeug and session management.
+- **Account Management**: Users can update their profile information and password.
+- **Password Reset**: Secure "Forgot Password" functionality with email-based tokens.
 
-### Course Management
-- Create/edit/delete courses
-- Schedule management with day/time/duration
-- Conflict detection for overlapping schedules
-- Enrollment capacity limits
+#### Course & Enrollment
+- **Full CRUD for Courses**: Teachers can create, read, update, and delete their courses.
+- **Smart Scheduling**: The system automatically detects and prevents schedule conflicts for both teachers and students.
+- **Enrollment Control**: Courses have capacity limits, and students can enroll/unenroll with a single click.
 
-### Dashboard Features
-- Today's schedule view
-- Upcoming classes
-- Weekly calendar view
-- Course statistics
+#### Dashboards & Views
+- **Personalized Dashboards**: Role-specific dashboards showing relevant stats, ongoing classes, and upcoming schedules.
+- **Weekly Calendar**: A visual calendar view of a user's weekly class schedule.
+- **Advanced Filtering**: Easily filter courses by day, time, enrollment status, or courses taught.
 
-### Admin Features
-- User management (view/delete users)
-- Course management
-- Enrollment management
-- System logs viewer
+#### Admin Panel
+- **System Oversight**: A dedicated admin dashboard with statistics on users, courses, and enrollments.
+- **Centralized Management**: Admins can manage all users, courses, and enrollments in the system.
+- **Activity Logging**: View system logs to monitor application activity and troubleshoot issues.
 
 ## Technical Details
 
-### Backend
-- Python 3
-- Flask web framework
-- JSON-based data storage
-- SMTP email integration
-- Comprehensive logging system
-
-### Frontend
-- HTML5
-- W3.CSS framework
-- Responsive design
-- Font Awesome icons
+- **Backend**: Python 3, Flask (using Application Factory and Blueprints)
+- **Frontend**: HTML5, W3.CSS (for a clean, responsive layout), Font Awesome Icons
+- **Data Storage**: Data is managed using flat-file JSON, making the application portable and easy to set up.
+- **Email Integration**: Uses `smtplib` for sending password reset emails.
 
 ## Requirements
-- Python 3.6+
-- Flask 3.1.0: Install via pip install flask
-- Werkzeug 3.1.3
+- Python 3.7+
+- All required packages are listed in `requirements.txt`.
 
-  **or for installing all the necessary packages for this project, run the following command in terminal:**
-  ```bash
-  pip install -r requirements.txt
+## Installation & Setup
 
-## Installation
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Armia-Niakan/Course-Management-System.git
+    cd Course-Management-System
+    ```
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Armia-Niakan/Course-Management-System.git
-   cd Course-Management-System
-2. Install requirements
+2.  **Create a virtual environment (recommended):**
+    ```bash
+    python -m venv env
+    source env/bin/activate  # On Windows, use `env\Scripts\activate`
+    ```
 
-3. Run the application:
-   ```bash
-   python app.py
-4. Access the system at http://localhost:5000
+3.  **Install the requirements:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## Default Admin Credentials
-Email: admin@example.com
+4.  **Run the application:**
+    ```bash
+    python app.py
+    ```
+5.  Access the system in your browser at `http://127.0.0.1:5000`.
 
-Password: 123456789
+## Configuration
+Email settings for the password reset feature
 
-## Project Structure
-
-## License
-None
-
-## Contact
-Armia Niakan
-armia.niakan@gmail.com
+```python
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+EMAIL_ADDRESS = 'your-email@gmail.com'
+EMAIL_PASSWORD = 'your-app-password'
