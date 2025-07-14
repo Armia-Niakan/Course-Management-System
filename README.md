@@ -20,7 +20,6 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - [Installation & Setup](#installation--setup)
 - [Configuration](#configuration)
 - [Security Note](#Security-Note)
-- [Default Admin Credentials](#default-admin-credentials)
 - [Project Structure](#project-structure)
 - [License](#license)
 - [Contact](#contact)
