@@ -89,14 +89,19 @@ A comprehensive Course Management System built with Python and Flask. It provide
 5.  Access the system in your browser at `http://127.0.0.1:5000`.
 
 ## Configuration
-Email settings for the password reset feature
+Create a file named .env in the root directory (same level as run.py) and add the following environment variables:
 
-```python
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-EMAIL_ADDRESS = 'your-email@gmail.com'
-EMAIL_PASSWORD = 'your-app-password'
+```env
+SECRET_KEY=your-secret-key
+EMAIL_ADDRESS=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
 ```
+Make sure your .env file is NOT committed to Git. It should be listed in your .gitignore.
+
+## Security Note
+- Use an App Password for Gmail (you must enable 2-Step Verification on your Google account)
+- Do not share your .env file or credentials publicly.
+- Example .env is intentionally excluded from the repository for security reasons.
 
 ## Default Admin Credentials
 Email: admin@example.com
