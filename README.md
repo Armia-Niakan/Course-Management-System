@@ -64,16 +64,12 @@ A comprehensive Course Management System built with Python and Flask. It provide
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/Armia-Niakan/Course-Management-System.git
-    ```
-    ```bash
     cd Course-Management-System
     ```
 
 2.  **Create a virtual environment (recommended):**
     ```bash
     python -m venv env
-    ```
-    ```bash
     source env/bin/activate  # On Windows, use `env\Scripts\activate`
     ```
 
@@ -81,12 +77,18 @@ A comprehensive Course Management System built with Python and Flask. It provide
     ```bash
     pip install -r requirements.txt
     ```
-
-4.  **Run the application:**
+4. **Configurate .env file**
+   
+   You can use .env.example
+    ```bash
+    cp .env.example .env
+    # Then edit .env with your values.
+    ```
+5.  **Run the application:**
     ```bash
     python run.py
     ```
-5.  Access the system in your browser at `http://127.0.0.1:5000`.
+6.  Access the system in your browser at `http://127.0.0.1:5000`.
 
 ## Configuration
 Create a file named .env in the root directory (same level as run.py) and add the following environment variables:
