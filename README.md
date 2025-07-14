@@ -64,12 +64,16 @@ A comprehensive Course Management System built with Python and Flask. It provide
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/Armia-Niakan/Course-Management-System.git
+    ```
+    ```bash
     cd Course-Management-System
     ```
 
 2.  **Create a virtual environment (recommended):**
     ```bash
     python -m venv env
+    ```
+    ```bash
     source env/bin/activate  # On Windows, use `env\Scripts\activate`
     ```
 
