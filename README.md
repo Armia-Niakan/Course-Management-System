@@ -101,14 +101,11 @@ Password: 123456789
 
 ## Project Structure
 
-[click here to see project structure](./project-structure.md)  
-
 <details>
-<summary>View project structure<summary>
+<summary>View project structure</summary>
   
 ```markdown
 /Course-Management-System
-
 ├── app/
 │ ├── models/
 │ │ ├── init.py
@@ -161,7 +158,7 @@ Password: 123456789
 ├── run.py
 └── requirements.txt
 ```
-<details>
+</details>
   
 ## License
 None
