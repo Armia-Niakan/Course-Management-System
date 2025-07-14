@@ -52,6 +52,8 @@ A comprehensive Course Management System built with Python Flask that allows stu
 - Python 3.6+
 - Flask 3.1.0: Install via pip install flask
 - Werkzeug 3.1.3
+
+  **or for installing all the necessary packages for this project, run the following command in terminal:**
   ```bash
   pip install -r requirements.txt
 
