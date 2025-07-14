@@ -12,7 +12,7 @@ class Config:
     SMTP_SERVER = 'smtp.gmail.com'
     SMTP_PORT = 587
     EMAIL_ADDRESS = 'coursemanagementsystem1403@gmail.com'
-    EMAIL_PASSWORD = 'natm cmet bspn gvci'  # Consider using an environment variable for security
+    EMAIL_PASSWORD = 'natm cmet bspn gvci'
     APP_URL = 'http://localhost:5000'
 
     VALID_ROLES = {"student", "teacher", "admin"}
