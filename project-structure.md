@@ -2,7 +2,6 @@
 
 ```markdown
 /Course-Management-System
-
 ├── app/
 │ ├── models/
 │ │ ├── init.py
