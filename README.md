@@ -94,8 +94,13 @@ Create a file named .env in the root directory (same level as run.py) and add th
 
 ```env
 SECRET_KEY=your-secret-key
+
 EMAIL_ADDRESS=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
+EMAIL_PASSWORD=your-gmail-app-password
+
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=123456789
 ```
 Make sure your .env file is NOT committed to Git. It should be listed in your .gitignore.
 
@@ -103,11 +108,6 @@ Make sure your .env file is NOT committed to Git. It should be listed in your .g
 - Use an App Password for Gmail (you must enable 2-Step Verification on your Google account)
 - Do not share your .env file or credentials publicly.
 - Example .env is intentionally excluded from the repository for security reasons.
-
-## Default Admin Credentials
-Email: admin@example.com
-
-Password: 123456789
 
 ## Project Structure
 
