@@ -5,6 +5,25 @@
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 
+## Table of Contents
+- [Overview](#Overview)
+- [Key Features](#key-features)
+  - [User & Role Management](#user--role-management)
+  - [Course & Enrollment](#course--enrollment)
+  - [Dashboards & Views](#dashboards--views)
+  - [Admin Panel](#admin-panel)
+- [Technical Details](#technical-details)
+- [Requirements](#requirements)
+- [Installation & Setup](#installation--setup)
+- [Configuration](#configuration)
+- [Default Admin Credentials](#default-admin-credentials)
+- [Project Structure](#project-structure)
+- [License](#license)
+- [Contact](#contact)
+
+## Overview
+This a Course Management System developed as a project for Guilan university advanced programming class.
+
 A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, and schedules.
 
 ## Key Features
@@ -32,8 +51,8 @@ A comprehensive Course Management System built with Python and Flask. It provide
 
 ## Technical Details
 
-- **Backend**: Python 3, Flask (using Application Factory and Blueprints)
-- **Frontend**: HTML5, W3.CSS (for a clean, responsive layout), Font Awesome Icons
+- **Backend**: Python 3, Flask
+- **Frontend**: HTML5, W3.CSS, Font Awesome Icons
 - **Data Storage**: Data is managed using flat-file JSON, making the application portable and easy to set up.
 - **Email Integration**: Uses `smtplib` for sending password reset emails.
 
@@ -74,3 +93,21 @@ SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 EMAIL_ADDRESS = 'your-email@gmail.com'
 EMAIL_PASSWORD = 'your-app-password'
+```
+
+## Default Admin Credentials
+Email: admin@example.com
+
+Password: 123456789
+
+## Project Structure
+
+## License
+None
+
+## Contact
+Armia Niakan
+
+armia.niakan@gmail.com
+
+GitHub: Armia-Niakan
