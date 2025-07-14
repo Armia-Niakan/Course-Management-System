@@ -80,7 +80,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
 
 4.  **Run the application:**
     ```bash
-    python app.py
+    python run.py
     ```
 5.  Access the system in your browser at `http://127.0.0.1:5000`.
 
@@ -100,6 +100,8 @@ Email: admin@example.com
 Password: 123456789
 
 ## Project Structure
+
+[click here to see project structure](./project-structure.md)  
 
 ## License
 None
