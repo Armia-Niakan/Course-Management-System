@@ -51,6 +51,7 @@
 │ └── config.py
 ├── data/
 │ ├── (JSON data files will be created here)
+├── app.log
 ├── run.py
 └── requirements.txt
 ```
