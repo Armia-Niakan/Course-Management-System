@@ -5,8 +5,11 @@
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 
+This a Course Management System developed as a project for Guilan university advanced programming class.
+
+A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, and schedules.
+
 ## Table of Contents
-- [Overview](#Overview)
 - [Key Features](#key-features)
   - [User & Role Management](#user--role-management)
   - [Course & Enrollment](#course--enrollment)
@@ -21,10 +24,6 @@
 - [License](#license)
 - [Contact](#contact)
 
-## Overview
-This a Course Management System developed as a project for Guilan university advanced programming class.
-
-A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, and schedules.
 
 ## Key Features
 
