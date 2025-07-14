@@ -1,0 +1,11 @@
+2025-07-14 20:39:35,549 - app - ERROR - Log clear failed: 'Logger' object has no attribute 'FileHandler'
+2025-07-14 20:50:56,865 - app - WARNING - Unauthorized admin access attempt by unknown
+2025-07-14 20:51:21,010 - app - INFO - New student account created: armia.niakan@gmail.com
+2025-07-14 20:51:33,135 - app - INFO - Password reset email sent to armia.niakan@gmail.com
+2025-07-14 20:51:33,136 - app - INFO - Password reset link has been sent to armia.niakan@gmail.com
+2025-07-14 20:52:40,988 - app - INFO - Password for user armia.niakan@gmail.com has changed successfully
+2025-07-14 20:53:00,384 - app - INFO - User armia.niakan@gmail.com logged in successfully
+2025-07-14 20:53:48,376 - app - INFO - User armia.niakan@gmail.com logged out successfully
+2025-07-14 21:13:55,551 - app - WARNING - Unauthorized admin access attempt by unknown
+2025-07-14 21:21:10,310 - app - INFO - Admin admin@example.com logged in successfully
+2025-07-14 22:18:08,591 - app - INFO - User admin@example.com logged out successfully
