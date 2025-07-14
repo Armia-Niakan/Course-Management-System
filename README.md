@@ -164,7 +164,10 @@ Make sure your .env file is NOT committed to Git. It should be listed in your .g
 │ ├── init.py
 │ └── config.py
 ├── data/
-│ ├── (JSON data files will be created here)
+│ ├── courses.json
+│ ├── enrollments.json
+│ ├── reset_tokens.json
+│ └── users.json
 ├── app.log
 ├── run.py
 └── requirements.txt
