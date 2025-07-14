@@ -34,7 +34,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - **Password Reset**: Secure "Forgot Password" functionality with email-based tokens.
 
 #### Course & Enrollment
-- **Full CRUD for Courses**: Teachers can create, read, update, and delete their courses.
+- Teachers can create, read, and delete their courses.
 - **Smart Scheduling**: The system automatically detects and prevents schedule conflicts for both teachers and students.
 - **Enrollment Control**: Courses have capacity limits, and students can enroll/unenroll with a single click.
 
