@@ -211,6 +211,8 @@ def admin_delete_enrollment():
     student_email = request.form.get('student_email')
     course_id = request.form.get('course_id')
 
+    referrer = request.referrer
+    
     if EnrollmentManager.delete_enrollment(student_email, course_id):
         CourseManager.decrement_students(course_id)
         flash("Enrollment deleted", "success")
@@ -218,7 +220,7 @@ def admin_delete_enrollment():
     else:
         flash("Enrollment not found", "error")
 
-    return redirect(url_for('admin.admin_enrollments'))
+    return redirect(referrer or url_for('admin.admin_enrollments', course_id=course_id))
 
 
 @admin_bp.route("/clear_logs", methods=['POST'])
