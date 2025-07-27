@@ -29,6 +29,9 @@ def dashboard():
 
     all_courses = CourseManager.load_courses()
 
+    if role == 'admin':
+        return redirect(url_for('admin.admin_dashboard'))
+    
     if role == 'student':
         enrollments = EnrollmentManager.get_student_enrollments(user_email)
         courses = [all_courses.get(e['course_id']) for e in enrollments if all_courses.get(e['course_id'])]

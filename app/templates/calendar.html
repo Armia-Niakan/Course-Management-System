@@ -113,7 +113,7 @@
                                     <p class="w3-small">
                                         <i class="fas fa-clock"></i> {{ course.duration }} hour(s)
                                     </p>
-                                    <a href="/course/{{ course.name }}" class="w3-button w3-deep-purple w3-round-large w3-small">
+                                    <a href="{{ url_for('course.course_detail', course_id=course.id) }}" class="w3-button w3-deep-purple w3-round-large w3-small">
                                         <i class="fas fa-book-open"></i> Details
                                     </a>
                                 </div>

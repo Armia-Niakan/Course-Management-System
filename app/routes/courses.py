@@ -31,6 +31,12 @@ def courses():
     if time_filter:
         filtered = [c for c in filtered if any(is_time_in_range(s['time'], time_filter) for s in c['schedule'])]
 
+    referrer = request.referrer
+
+    if role == 'admin':
+        flash("Unauthorized access")
+        return redirect(referrer or url_for('admin.admin_dashboard'))
+    
     enrolled_ids = []
     if role == 'student':
         enrolled = EnrollmentManager.get_student_enrollments(user_email)
@@ -110,7 +116,7 @@ def course_detail(course_id):
 
     if role == 'student':
         is_enrolled = any(e['course_id'] == course_id for e in EnrollmentManager.get_student_enrollments(email))
-    elif is_teacher:
+    elif is_teacher or role == 'admin':
         students = [UserManager.get_user(e['student_email']) for e in EnrollmentManager.get_course_enrollments(course_id)]
 
     hours = sum(s['duration'] for s in course['schedule'])
@@ -224,6 +230,12 @@ def calendar():
     role = session['role']
     calendar_data = {day: [] for day in ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']}
 
+    referrer = request.referrer
+
+    if role == 'admin':
+        flash("Unauthorized access")
+        return redirect(referrer or url_for('admin.admin_dashboard'))
+    
     if role == 'student':
         enrolled = EnrollmentManager.get_student_enrollments(email)
         courses = [CourseManager.get_course(e['course_id']) for e in enrolled if CourseManager.get_course(e['course_id'])]
