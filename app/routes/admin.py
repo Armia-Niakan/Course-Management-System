@@ -2,6 +2,9 @@ from flask import current_app, Blueprint, render_template, redirect, url_for, re
 from werkzeug.security import generate_password_hash
 import datetime
 import os
+import logging
+from logging import FileHandler
+from logging.handlers import RotatingFileHandler
 
 from app.utils.decorators import admin_required
 from app.services.user_manager import UserManager
@@ -67,6 +70,7 @@ def add_admin():
 
     return render_template('add_admin.html', username=session.get('username'))
 
+@admin_bp.route("/")
 @admin_bp.route("/dashboard")
 @admin_required
 def admin_dashboard():
@@ -150,11 +154,14 @@ def admin_enrollments():
 def admin_logs():
     log_path = current_app.config['LOG_FILE']
     try:
+        if not os.path.exists(log_path):
+            open(log_path, 'a').close()
         with open(log_path, 'r') as f:
             logs = f.readlines()
         logs = [line.strip() for line in logs][-200:]
-    except FileNotFoundError:
-        logs = ["Log file not found"]
+    except Exception as e:
+        logs = [f"Error reading log file: {str(e)}"]
+        current_app.logger.error(f"Failed to read logs: {str(e)}")
 
     return render_template('admin_logs.html', logs=reversed(logs), username=session['username'])
 
@@ -219,16 +226,36 @@ def admin_delete_enrollment():
 def admin_clear_logs():
     log_path = current_app.config['LOG_FILE']
     try:
+        if current_app.config.get('LOG_ROTATE', False):
+            for i in range(1, current_app.config.get('LOG_BACKUP_COUNT', 3) + 1):
+                backup_file = f"{log_path}.{i}"
+                if os.path.exists(backup_file):
+                    os.remove(backup_file)
         with open(log_path, 'w') as f:
             f.write('')
 
-        for handler in current_app.logger.handlers:
-            if isinstance(handler, current_app.logger.FileHandler):
+        for handler in current_app.logger.handlers[:]:
+            if isinstance(handler, (FileHandler, RotatingFileHandler)):
                 handler.close()
                 current_app.logger.removeHandler(handler)
 
-        flash("Logs cleared", "success")
-        current_app.logger.info("Logs cleared by admin")
+        if current_app.config.get('LOG_ROTATE', False):
+            handler = RotatingFileHandler(
+                log_path,
+                maxBytes=current_app.config.get('LOG_MAX_BYTES', 10000),
+                backupCount=current_app.config.get('LOG_BACKUP_COUNT', 3)
+            )
+        else:
+            handler = FileHandler(log_path)
+
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        current_app.logger.addHandler(handler)
+
+        flash("All logs and backups cleared", "success")
+        current_app.logger.info("All log files cleared by admin")
         return jsonify({"success": True})
     except Exception as e:
         current_app.logger.error(f"Log clear failed: {e}")

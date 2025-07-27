@@ -1,13 +1,13 @@
 from flask import current_app, Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash
 import datetime
+
 from app.models.user import User
 from app.services.user_manager import UserManager
 from app.services.token_manager import TokenManager
 from app.utils.helpers import send_reset_email
 
 auth_bp = Blueprint('auth', __name__)
-  
 
 @auth_bp.route("/signUp", methods=['GET', 'POST'])
 def signup_page():

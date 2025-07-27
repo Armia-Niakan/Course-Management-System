@@ -1,5 +1,5 @@
 import datetime
-from flask import current_app, render_template
+from flask import current_app
 import smtplib
 from email.mime.text import MIMEText
 

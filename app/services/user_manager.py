@@ -1,3 +1,4 @@
+import os
 import json
 import datetime
 from typing import Dict, Optional
@@ -16,30 +17,41 @@ class UserManager:
                 users_data = json.load(f)
                 users = {email: User.from_dict(data) for email, data in users_data.items()}
                 if not any(user.role == 'admin' for user in users.values()):
-                    default_admin = User(
-                        email="admin@example.com",
-                        username="admin",
-                        password_hash=generate_password_hash("123456789"),
-                        role="admin",
-                        created_at=str(datetime.datetime.now())
-                    )
+                    default_admin = UserManager.create_default_admin()
                     users[default_admin.email] = default_admin
                     UserManager.save_users(users)
                     current_app.logger.info("Created default admin user")
                 return users
         except (FileNotFoundError, json.JSONDecodeError):
-            default_admin = User(
-                email="admin@example.com",
-                username="admin",
-                password_hash=generate_password_hash("123456789"),
-                role="admin",
-                created_at=str(datetime.datetime.now())
-            )
+            default_admin = UserManager.create_default_admin()
             users = {default_admin.email: default_admin}
             UserManager.save_users(users)
             current_app.logger.info("Created new user file with default admin")
             return users
+        
+    @staticmethod
+    def create_default_admin() -> User:
+        email = os.getenv('DEFAULT_ADMIN_EMAIL', 'admin@example.com')
+        username = os.getenv('DEFAULT_ADMIN_USERNAME', 'admin')
+        password = os.getenv('DEFAULT_ADMIN_PASSWORD', '123456789')
 
+        if not all([email, username, password]):
+            current_app.logger.warning(
+                "Missing one or more default admin environment variables. "
+                "Using fallback credentials."
+            )
+            email = 'admin@example.com'
+            username = 'admin'
+            password = '123456789'
+
+        return User(
+            email=email,
+            username=username,
+            password_hash=generate_password_hash(password),
+            role='admin',
+            created_at=str(datetime.datetime.now())
+        )
+    
     @staticmethod
     def save_users(users: Dict[str, User]):
         path = current_app.config['USER_DATA_FILE']
