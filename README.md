@@ -2,8 +2,9 @@
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
+![dotenv](https://img.shields.io/badge/dotenv-%23ECD53F.svg?style=for-the-badge&logo=dotenv&logoColor=black)
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
+![W3.CSS](https://img.shields.io/badge/w3.css-%23FFFFFF.svg?style=for-the-badge&logo=w3schools&logoColor=%2304AA6D)
 
 This a Course Management System developed as a project for Guilan university advanced programming class.
 
@@ -19,7 +20,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - [Requirements](#requirements)
 - [Installation & Setup](#installation--setup)
 - [Configuration](#configuration)
-- [Security Note](#Security-Note)
+- [Security Note](#security-note)
 - [Project Structure](#project-structure)
 - [License](#license)
 - [Contact](#contact)
