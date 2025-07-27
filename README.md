@@ -19,7 +19,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - [Requirements](#requirements)
 - [Installation & Setup](#installation--setup)
 - [Configuration](#configuration)
-- [Security Note](#Security-Note)
+- [Default Admin Credentials](#default-admin-credentials)
 - [Project Structure](#project-structure)
 - [License](#license)
 - [Contact](#contact)
@@ -64,12 +64,16 @@ A comprehensive Course Management System built with Python and Flask. It provide
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/Armia-Niakan/Course-Management-System.git
+    ```
+    ```bash
     cd Course-Management-System
     ```
 
 2.  **Create a virtual environment (recommended):**
     ```bash
     python -m venv env
+    ```
+    ```bash
     source env/bin/activate  # On Windows, use `env\Scripts\activate`
     ```
 
@@ -77,38 +81,27 @@ A comprehensive Course Management System built with Python and Flask. It provide
     ```bash
     pip install -r requirements.txt
     ```
-4. **Configurate .env file**
-   
-   You can use .env.example
-    ```bash
-    cp .env.example .env
-    # Then edit .env with your values.
-    ```
-5.  **Run the application:**
+
+4.  **Run the application:**
     ```bash
     python run.py
     ```
-6.  Access the system in your browser at `http://127.0.0.1:5000`.
+5.  Access the system in your browser at `http://127.0.0.1:5000`.
 
 ## Configuration
-Create a file named .env in the root directory (same level as run.py) and add the following environment variables:
+Email settings for the password reset feature
 
-```env
-SECRET_KEY=your-secret-key
-
-EMAIL_ADDRESS=your-email@gmail.com
-EMAIL_PASSWORD=your-gmail-app-password
-
-DEFAULT_ADMIN_EMAIL=admin@example.com
-DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=123456789
+```python
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+EMAIL_ADDRESS = 'your-email@gmail.com'
+EMAIL_PASSWORD = 'your-app-password'
 ```
-Make sure your .env file is NOT committed to Git. It should be listed in your .gitignore.
 
-## Security Note
-- Use an App Password for Gmail (you must enable 2-Step Verification on your Google account)
-- Do not share your .env file or credentials publicly.
-- Example .env is intentionally excluded from the repository for security reasons.
+## Default Admin Credentials
+Email: admin@example.com
+
+Password: 123456789
 
 ## Project Structure
 
@@ -164,10 +157,7 @@ Make sure your .env file is NOT committed to Git. It should be listed in your .g
 │ ├── init.py
 │ └── config.py
 ├── data/
-│ ├── courses.json
-│ ├── enrollments.json
-│ ├── reset_tokens.json
-│ └── users.json
+│ ├── (JSON data files will be created here)
 ├── app.log
 ├── run.py
 └── requirements.txt
