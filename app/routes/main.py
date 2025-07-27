@@ -1,24 +1,21 @@
 from flask import current_app, Blueprint, render_template, redirect, url_for, session, flash, request
 from werkzeug.security import generate_password_hash
 import datetime
+
 from app.services.user_manager import UserManager
 from app.services.course_manager import CourseManager
 from app.services.enrollment_manager import EnrollmentManager
-
+from app.utils.decorators import login_required, admin_required, teacher_required
 main_bp = Blueprint('main', __name__)
-
 
 @main_bp.route("/")
 @main_bp.route("/about")
 def about():
     return render_template('about.html')
 
-
 @main_bp.route("/dashboard")
+@login_required
 def dashboard():
-    if 'user_email' not in session:
-        flash("You have to login first", "error")
-        return redirect(url_for('auth.login'))
 
     user_email = session['user_email']
     role = session['role']
@@ -84,10 +81,8 @@ def dashboard():
 
 
 @main_bp.route("/profile")
+@login_required
 def profile():
-    if 'user_email' not in session:
-        flash("You need to login first", "error")
-        return redirect(url_for('auth.login'))
 
     email = session['user_email']
     role = session['role']
@@ -108,10 +103,8 @@ def profile():
 
 
 @main_bp.route("/settings")
+@login_required
 def settings():
-    if 'user_email' not in session:
-        flash("You need to login first", "error")
-        return redirect(url_for('auth.login'))
 
     email = session['user_email']
     user = UserManager.get_user(email)
@@ -124,9 +117,8 @@ def settings():
 
 
 @main_bp.route("/update_username", methods=['POST'])
+@login_required
 def update_username():
-    if 'user_email' not in session:
-        return redirect(url_for('auth.login'))
 
     new_username = request.form.get('new_username')
     password = request.form.get('password')
@@ -149,9 +141,8 @@ def update_username():
 
 
 @main_bp.route("/update_password", methods=['POST'])
+@login_required
 def update_password():
-    if 'user_email' not in session:
-        return redirect(url_for('auth.login'))
 
     current_password = request.form.get('current_password')
     new_password = request.form.get('new_password')
@@ -178,9 +169,8 @@ def update_password():
 
 
 @main_bp.route("/delete_account", methods=['POST'])
+@login_required
 def delete_account():
-    if 'user_email' not in session:
-        return redirect(url_for('auth.login'))
 
     password = request.form.get('password')
     email = session['user_email']

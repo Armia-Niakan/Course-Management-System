@@ -5,15 +5,13 @@ from app.services.course_manager import CourseManager
 from app.services.enrollment_manager import EnrollmentManager
 from app.services.user_manager import UserManager
 from app.utils.helpers import is_time_in_range
+from app.utils.decorators import teacher_required, login_required
 
 course_bp = Blueprint('course', __name__)
 
-
 @course_bp.route("/courses")
+@login_required
 def courses():
-    if 'user_email' not in session:
-        flash("You need to login first", "error")
-        return redirect(url_for('auth.login'))
 
     role = session['role']
     user_email = session['user_email']
@@ -52,10 +50,8 @@ def courses():
 
 
 @course_bp.route("/courses/create", methods=['GET', 'POST'])
+@teacher_required
 def create_course():
-    if 'user_email' not in session or session['role'] != 'teacher':
-        flash("Unauthorized", "error")
-        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
         courses = CourseManager.load_courses()
@@ -97,10 +93,8 @@ def create_course():
 
 
 @course_bp.route("/course/<course_id>")
+@login_required
 def course_detail(course_id):
-    if 'user_email' not in session:
-        flash("You need to login first", "error")
-        return redirect(url_for('auth.login'))
 
     courses = CourseManager.load_courses()
     course = courses.get(course_id)
@@ -182,10 +176,8 @@ def unenroll():
 
 
 @course_bp.route("/delete_course", methods=['POST'])
+@teacher_required
 def delete_course():
-    if 'user_email' not in session or session['role'] != 'teacher':
-        flash("Unauthorized", "error")
-        return redirect(url_for('auth.login'))
 
     course_id = request.form['course_id']
     courses = CourseManager.load_courses()
@@ -205,10 +197,8 @@ def delete_course():
 
 
 @course_bp.route("/remove_student", methods=['POST'])
+@teacher_required
 def remove_student():
-    if 'user_email' not in session or session['role'] != 'teacher':
-        flash("Unauthorized", "error")
-        return redirect(url_for('auth.login'))
 
     course_id = request.form['course_id']
     student_email = request.form['student_email']
@@ -227,9 +217,8 @@ def remove_student():
 
 
 @course_bp.route("/calendar")
+@login_required
 def calendar():
-    if 'user_email' not in session:
-        return redirect(url_for('auth.login'))
 
     email = session['user_email']
     role = session['role']

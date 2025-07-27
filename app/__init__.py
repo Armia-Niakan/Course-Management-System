@@ -1,7 +1,7 @@
 import os
 from flask import Flask
-from logging.handlers import RotatingFileHandler
 import logging
+from logging.handlers import RotatingFileHandler
 
 from .config import Config
 
@@ -11,7 +11,7 @@ def create_app():
 
     handler = RotatingFileHandler(Config.LOG_FILE, maxBytes=10000, backupCount=3)
     handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
