@@ -60,18 +60,47 @@
                 <div class="w3-panel w3-padding-16">
                     <p>This a Course Management System developed as a project for Guilan university advanced programming class.</p>
                     
-                    <h2 class="w3-margin-top"><i class="fas fa-lightbulb w3-text-deep-purple"></i> <b>Key Features</b></h2>
-                    <ul class="w3-ul">
-                        <li><i class="fas fa-check-circle w3-text-green"></i> User-friendly interface</li>
-                        <li><i class="fas fa-check-circle w3-text-green"></i> Sign Up and Login page with reset password feature</li>
-                        <li><i class="fas fa-check-circle w3-text-green"></i> Real-time class scheduling and calendar</li>
-                        <li><i class="fas fa-check-circle w3-text-green"></i> Interactive course management</li>
-                        <li><i class="fas fa-check-circle w3-text-green"></i> Admin features</li>
-                        <li><i class="fas fa-check-circle w3-text-green"></i> Maintains a log</li>
-                    </ul>
+                    <div class="w3-margin-top">
+                        <h3><i class="fas fa-users w3-text-deep-purple"></i> <b>User System</b></h3>
+                        <ul class="w3-ul">
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Three-tier role system (Student/Teacher/Admin)</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Secure authentication with password hashing</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Email-based password recovery</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Environment variables for sensitive data protection</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="w3-margin-top">
+                        <h3><i class="fas fa-calendar-alt w3-text-deep-purple"></i> <b>Scheduling</b></h3>
+                        <ul class="w3-ul">
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Interactive weekly calendar view</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Automatic schedule conflict detection</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Course capacity management</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="w3-margin-top">
+                        <h3><i class="fas fa-tachometer-alt w3-text-deep-purple"></i> <b>Administration</b></h3>
+                        <ul class="w3-ul">
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Comprehensive admin dashboard</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> System-wide user management</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Detailed activity logs</li>
+                        </ul>
+                    </div>
+
+                    <div class="w3-margin-top">
+                        <h3><i class="fas fa-shield-alt w3-text-deep-purple"></i> Security Features</h3>
+                        <ul class="w3-ul">
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Environment variables for sensitive data</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> .env.example provided for easy setup</li>
+                            <li><i class="fas fa-check-circle w3-text-green"></i> Werkzeug password hashing and session security</li>
+                        </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        
         
         <div class="">
             <div class="about-box">
@@ -84,6 +113,7 @@
                                 <h4><b>Backend</b></h4>
                                 <p><i class="fas fa-server w3-text-deep-purple"></i> Python Flask framework</p>
                                 <p><i class="fas fa-database w3-text-deep-purple"></i> json data storage</p>
+                                <p><i class="fas fa-envelope tech-icon w3-text-deep-purple"></i> SMTP email integration</p>
                             </div>
                         </div>
                         <div class="w3-half w3-padding">
@@ -91,16 +121,35 @@
                                 <h4><b>Frontend</b></h4>
                                 <p><i class="fab fa-html5 w3-text-deep-purple"></i> HTML5</p>
                                 <p><i class="fab fa-css3-alt w3-text-deep-purple"></i> w3.css framework</p>
+                                <p><i class="fab fa-font-awesome tech-icon w3-text-deep-purple"></i> Font Awesome icons</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+                <div class="w3-panel w3-padding-16">
+                    <h3><b>Requirements</b></h3>
+                    <div class="w3-card w3-padding w3-light-grey w3-round-large">
+                        <p><i class="fab fa-python w3-text-deep-purple"></i> Python 3.7+ runtime environment</p>
+                        <p><i class="fas fa-file-alt w3-text-deep-purple"></i> All dependencies in requirements.txt</p>
+                        <p><i class="fas fa-envelope w3-text-deep-purple"></i> SMTP email service configuration</p>
+                        <p><i class="fas fa-key w3-text-deep-purple"></i> Proper .env file setup</p>
+                    </div>
+                    <div class="w3-panel w3-pale-red w3-leftbar w3-border-red">
+                        <p><i class="fas fa-exclamation-triangle w3-text-red"></i> 
+                        <b>Security Note:</b> Always protect your .env file and change default admin credentials immediately</p>
+                    </div>
+                </div>
                 <div class="w3-panel w3-padding-16">
                     <h3><b>Development Team</b></h3>
                     <div class="w3-card w3-padding w3-light-grey w3-round-large">
                         <p><i class="fas fa-user w3-text-deep-purple"></i> <b>Armia Niakan</b></p>
-                        <p><i class="fas fa-envelope w3-text-deep-purple"></i> <a href="mailto:armia.niakan@gmail.com"  style="text-decoration: none;">armia.niakan@gmail.com</a></p>
+                        <p><i class="fas fa-envelope w3-text-deep-purple"></i> 
+                            <a href="mailto:armia.niakan@gmail.com"  target="_blank" style="text-decoration: none;">armia.niakan@gmail.com</a></p>
+                        <p><i class="fab fa-github tech-icon w3-text-deep-purple"></i> 
+                            <a href="https://github.com/Armia-Niakan" target="_blank" style="text-decoration: none;">GitHub: Armia-Niakan</a></p>
+                        <p><i class="fas fa-code-branch tech-icon w3-text-deep-purple"></i> 
+                            <a href="https://github.com/Armia-Niakan/Course-Management-System" target="_blank" style="text-decoration: none;">Project Repository</a>
+                        </p>
                     </div>
                 </div>
             </div>
