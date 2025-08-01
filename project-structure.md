@@ -4,20 +4,23 @@
 /Course-Management-System
 ├── app/
 │ ├── models/
-│ │ ├── init.py
 │ │ ├── course.py
 │ │ ├── enrollment.py
+│ │ ├── exam.py
+│ │ ├── submission.py
 │ │ └── user.py
 │ ├── routes/
-│ │ ├── init.py
 │ │ ├── admin.py
 │ │ ├── auth.py
 │ │ ├── courses.py
+│ │ ├── exam.py
 │ │ └── main.py
 │ ├── services/
 │ │ ├── init.py
 │ │ ├── course_manager.py
 │ │ ├── enrollment_manager.py
+│ │ ├── exam_manager.py
+│ │ ├── submission_manager.py
 │ │ ├── token_manager.py
 │ │ └── user_manager.py
 │ ├── static/
@@ -35,25 +38,32 @@
 │ │ ├── course_detail.html
 │ │ ├── courses.html
 │ │ ├── create_course.html
+│ │ ├── create_exam.html
 │ │ ├── dashboard.html
+│ │ ├── exam_results.html
+│ │ ├── exams.html
 │ │ ├── forgot_password.html
 │ │ ├── login.html
+│ │ ├── payment.html
 │ │ ├── profile.html
 │ │ ├── reset_password.html
 │ │ ├── settings.html
-│ │ └── signUp.html
+│ │ ├── signUp.html
+│ │ ├── submission_detail.html
+│ │ └── take_exam.html
 │ ├── utils/
-│ │ ├── init.py
 │ │ ├── decorators.py
+│ │ ├── file_handler.py
 │ │ └── helpers.py
 │ ├── init.py
 │ └── config.py
 ├── data/
-│ ├── courses.json
-│ ├── enrollments.json
-│ ├── reset_tokens.json
-│ └── users.json
+├── upload/
+├── .env
+├── .gitignore
 ├── app.log
-├── run.py
-└── requirements.txt
+├── project-structure.md
+├── README.md
+├── requirements.txt
+└── run.py
 ```
