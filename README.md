@@ -14,7 +14,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - [Key Features](#key-features)
   - [User & Role Management](#user--role-management)
   - [Course & Enrollment](#course--enrollment)
-  - [Exams & Assessments](exams--assessments)
+  - [Exams & Assessments](#exams--assessments)
   - [Dashboards & Views](#dashboards--views)
   - [Admin Panel](#admin-panel)
 - [Technical Details](#technical-details)
