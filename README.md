@@ -8,12 +8,13 @@
 
 This a Course Management System developed as a project for Guilan university advanced programming class.
 
-A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, and schedules.
+A comprehensive Course Management System built with Python and Flask. It provides a clean and efficient platform for students, teachers, and administrators to manage courses, enrollments, exams, and schedules.
 
 ## Table of Contents
 - [Key Features](#key-features)
   - [User & Role Management](#user--role-management)
   - [Course & Enrollment](#course--enrollment)
+  - [Exams & Assessments](#exams--assessments)
   - [Dashboards & Views](#dashboards--views)
   - [Admin Panel](#admin-panel)
 - [Technical Details](#technical-details)
@@ -35,12 +36,23 @@ A comprehensive Course Management System built with Python and Flask. It provide
 - **Password Reset**: Secure "Forgot Password" functionality with email-based tokens.
 
 #### Course & Enrollment
-- Teachers can create, read, and delete their courses.
+- **Course Creation**: Teachers can create, read, and delete their courses.
+- **Course Materials**: Teachers can upload various file types (PDFs, videos, docs) as course materials, which enrolled students can then view and download.
+- **Course Pricing**: Teachers can set a price for a course or mark it as free.
+- **Payment Simulation**: A mock payment page for students enrolling in paid courses.
 - **Smart Scheduling**: The system automatically detects and prevents schedule conflicts for both teachers and students.
-- **Enrollment Control**: Courses have capacity limits, and students can enroll/unenroll with a single click.
+- **Enrollment Control**: Courses have capacity limits, and students can enroll/unenroll with a single click, with a refund warning.
+
+#### Exams & Assessments
+- **Custom Exam Creation**: Teachers can create exams for their courses with multiple-choice questions.
+- **Timed Exams**: Set a specific duration for each exam, with a persistent countdown timer for students.
+- **Automated Grading**: The system automatically grades exams upon submission.
+- **Result Tracking**: Teachers and admins can view detailed results for all students who have taken an exam.
+- **Submission Review**: Teachers can review the specific answers submitted by each student.
 
 #### Dashboards & Views
 - **Personalized Dashboards**: Role-specific dashboards showing relevant stats, ongoing classes, and upcoming schedules.
+- **Centralized Exam Page**: A dedicated page for users to view all relevant exams based on their role.
 - **Weekly Calendar**: A visual calendar view of a user's weekly class schedule.
 - **Advanced Filtering**: Easily filter courses by day, time, enrollment status, or courses taught.
 
@@ -120,20 +132,23 @@ Make sure your .env file is NOT committed to Git. It should be listed in your .g
 /Course-Management-System
 ├── app/
 │ ├── models/
-│ │ ├── init.py
 │ │ ├── course.py
 │ │ ├── enrollment.py
+│ │ ├── exam.py
+│ │ ├── submission.py
 │ │ └── user.py
 │ ├── routes/
-│ │ ├── init.py
 │ │ ├── admin.py
 │ │ ├── auth.py
 │ │ ├── courses.py
+│ │ ├── exam.py
 │ │ └── main.py
 │ ├── services/
 │ │ ├── init.py
 │ │ ├── course_manager.py
 │ │ ├── enrollment_manager.py
+│ │ ├── exam_manager.py
+│ │ ├── submission_manager.py
 │ │ ├── token_manager.py
 │ │ └── user_manager.py
 │ ├── static/
@@ -151,27 +166,34 @@ Make sure your .env file is NOT committed to Git. It should be listed in your .g
 │ │ ├── course_detail.html
 │ │ ├── courses.html
 │ │ ├── create_course.html
+│ │ ├── create_exam.html
 │ │ ├── dashboard.html
+│ │ ├── exam_results.html
+│ │ ├── exams.html
 │ │ ├── forgot_password.html
 │ │ ├── login.html
+│ │ ├── payment.html
 │ │ ├── profile.html
 │ │ ├── reset_password.html
 │ │ ├── settings.html
-│ │ └── signUp.html
+│ │ ├── signUp.html
+│ │ ├── submission_detail.html
+│ │ └── take_exam.html
 │ ├── utils/
-│ │ ├── init.py
 │ │ ├── decorators.py
+│ │ ├── file_handler.py
 │ │ └── helpers.py
 │ ├── init.py
 │ └── config.py
 ├── data/
-│ ├── courses.json
-│ ├── enrollments.json
-│ ├── reset_tokens.json
-│ └── users.json
+├── upload/
+├── .env
+├── .gitignore
 ├── app.log
-├── run.py
-└── requirements.txt
+├── project-structure.md
+├── README.md
+├── requirements.txt
+└── run.py
 ```
 </details>
   

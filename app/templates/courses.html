@@ -26,6 +26,9 @@
         <a href="{{ url_for('course.courses') }}" class="w3-bar-item w3-button w3-padding-large w3-round-large w3-white">
             <i class="fas fa-book"></i> Courses
         </a> 
+        <a href="{{ url_for('exam.exams_page') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-file-signature"></i> Exams
+        </a>
         <a href="{{ url_for('course.calendar') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
             <i class="fas fa-calendar"></i> Calendar
         </a>
@@ -67,7 +70,7 @@
     {% if messages %}
         <div class="w3-panel">
         {% for category, message in messages %}
-            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom" 
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'yellow' }} w3-round w3-margin-bottom" 
                  id="flash-{{ loop.index }}"
                  style="position: relative; top: 35px">
                 {{ message }}
@@ -179,76 +182,37 @@
             <div class="w3-col m8">
                 {% if courses %}
                     {% for course in courses %}
-                    <div class="w3-card w3-white w3-round-large w3-margin-bottom w3-course-card {% if course.current_students >= course.max_students %}w3-course-full{% endif %}">
+                    <div class="w3-card w3-white w3-round-large w3-margin-bottom">
                         <div class="w3-container w3-padding-16">
                             <div class="w3-row">
                                 <div class="w3-col m9">
-                                    <div>
-                                        <p>
-                                            <i class="fas fa-book w3-text-deep-purple"></i> 
-                                            <b> Course name: {{ course.name }}</b>
-                                        </p>
-                                    </div>
+                                    <h4><b>{{ course['name'] }}</b></h4>
                                     <div class="w3-text-grey">
-                                        {% for schedule in course.schedule %}
-                                        <p>
-                                            <i class="fas fa-calendar-day w3-text-deep-purple"></i> 
-                                            {{ schedule.day }} at {{ schedule.time }} ({{ schedule.duration }} hrs)
-                                        </p>
-                                        {% endfor %}
-                                        <p>
-                                            <i class="fas fa-user-tie w3-text-deep-purple"></i> 
-                                            Teacher: {{ course.teacher_name }}
-                                        </p>
-                                        <p>
-                                            <i class="fas fa-users w3-text-deep-purple"></i> 
-                                            {{ course.current_students }}/{{ course.max_students }} students
-                                        </p>
+                                        <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course['teacher_name'] }}</p>
+                                        <p><i class="fas fa-users w3-text-deep-purple"></i> {{ course['current_students'] }}/{{ course['max_students'] }} students</p>
+                                        <p><i class="fas fa-dollar-sign w3-text-deep-purple"></i> Price: ${{ "%.2f"|format(course.get('price', 0.0)) }}</p>
                                     </div>
                                 </div>
-                                <div class="w3-col m3 w3-center">
+                                <div class="w3-col m3 w3-center w3-padding-16">
                                     {% if role == 'student' %}
-                                        {% if course.id in enrolled_course_ids %}
+                                        {% if course['id'] in enrolled_course_ids %}
                                             <p class="w3-text-green"><i class="fas fa-check-circle"></i> Enrolled</p>
-                                            <form method="POST" action="{{ url_for('course.unenroll') }}" style="display:inline;">
-                                                <input type="hidden" name="course_id" value="{{ course.id }}">
-                                                <button type="submit" class="w3-button w3-red w3-round-large w3-enroll-btn">
-                                                    <i class="fas fa-times"></i> Unenroll
-                                                </button>
-                                                <div class="w3-padding-small">
-                                                    <a href="{{ url_for('course.course_detail', course_id=course.id) }}" class="w3-button w3-deep-purple w3-round-large">
-                                                        <i class="fas fa-book-open w3-margin-right"></i>View Course
-                                                    </a>
-                                                </div>
-                                            </form>
                                         {% else %}
-                                            {% if course.current_students < course.max_students %}
-                                                <form method="POST" action="{{ url_for('course.enroll') }}" style="display:inline;">
-                                                    <input type="hidden" name="course_id" value="{{ course.id }}">
-                                                    <button type="submit" class="w3-button w3-green w3-round-large w3-enroll-btn">
+                                            {% if course['current_students'] < course['max_students'] %}
+                                                <form action="{{ url_for('course.enroll') }}" method="POST">
+                                                    <input type="hidden" name="course_id" value="{{ course['id'] }}">
+                                                    <button type="submit" class="w3-button w3-green w3-round-large">
                                                         <i class="fas fa-plus"></i> Enroll
                                                     </button>
-                                                    <div class="w3-padding-small">
-                                                    <a href="{{ url_for('course.course_detail', course_id=course.id) }}" class="w3-button w3-deep-purple w3-round-large">
-                                                        <i class="fas fa-book-open w3-margin-right"></i>View Course
-                                                    </a>
-                                                </div>
                                                 </form>
                                             {% else %}
                                                 <p class="w3-text-red"><i class="fas fa-times-circle"></i> Course Full</p>
                                             {% endif %}
                                         {% endif %}
-                                    {% else %}
-                                        {% if course.teacher_name == username %}
-                                        <a href="{{ url_for('course.course_detail', course_id=course.id) }}" class="w3-button w3-deep-purple w3-round-large">
-                                            <i class="fas fa-cog"></i> Manage
-                                        </a>
-                                        {% else %}
-                                        <a href="{{ url_for('course.course_detail', course_id=course.id) }}" class="w3-button w3-deep-purple w3-round-large">
-                                            <i class="fas fa-book-open w3-margin-right"></i>View Course
-                                        </a>
-                                        {% endif %}
                                     {% endif %}
+                                    <a href="{{ url_for('course.course_detail', course_id=course['id']) }}" class="w3-button w3-light-grey w3-round-large w3-margin-top">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -277,7 +241,6 @@
         document.getElementById("myOverlay").style.display = "none";
     }
 </script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const onlyEnrolled = document.querySelector('input[name="only_enrolled"]');

@@ -96,7 +96,7 @@
                 <span onclick="dismissFlash(this.parentElement)" 
                       class="w3-button w3-right w3-hover-none" 
                       style="position: absolute; right: 0; top: 0; padding: 8px 16px;">
-                    &times;
+                    ×
                 </span>
             </div>
             <script>
@@ -185,13 +185,22 @@
                             <i class="fas fa-plus w3-margin-right"></i> Add Another Schedule
                         </button>
                     </div>
-                    
-                    <div class="w3-inline" style="position: relative; margin-left: 225px; margin-right: 225px;">
-                        <label><b><i class="fas fa-users w3-margin-right w3-text-deep-purple w3-margin-left"></i>Maximum Students</b></label>
-                        <input class="w3-input w3-border w3-round-large w3-margin-left w3-col s3" type="number" name="max_students" min="1" value="20" required>
+                    <div class="w3-row-padding w3-margin-top">
+                        <div class="w3-half">
+                             <label><b><i class="fas fa-users w3-margin-right w3-text-deep-purple"></i>Maximum Students</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="number" name="max_students" min="1" value="20" required>
+                        </div>
+                        <div class="w3-half">
+                            <label><b><i class="fas fa-dollar-sign w3-margin-right w3-text-deep-purple"></i>Price ($)</b></label>
+                            <input class="w3-input w3-border w3-round-large" type="number" name="price" id="price_input" min="0" step="0.01" value="0.00" required>
+                        </div>
+                    </div>
+                     <div class="w3-panel w3-margin-top">
+                        <input class="w3-check" type="checkbox" name="is_free" id="is_free_checkbox">
+                        <label>This is a free course</label>
                     </div>
                     
-                    <div class="w3-section w3-center">
+                    <div class="w3-section w3-center w3-margin-top">
                         <button type="submit" class="w3-button w3-green w3-round-large w3-padding-large">
                             <i class="fas fa-save w3-margin-right"></i> Create Course
                         </button>
@@ -210,8 +219,19 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize flatpickr for initial time input
         initializeFlatpickr();
+
+        const freeCheckbox = document.getElementById('is_free_checkbox');
+        const priceInput = document.getElementById('price_input');
+
+        freeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                priceInput.value = '0.00';
+                priceInput.disabled = true;
+            } else {
+                priceInput.disabled = false;
+            }
+        });
     });
 
     function initializeFlatpickr(element) {
@@ -229,52 +249,29 @@
 
     function addSchedule() {
         const schedules = document.getElementById('schedules');
-        const lastSchedule = schedules.lastElementChild;
         const newSchedule = schedules.children[0].cloneNode(true);
-        
-        // Get the duration value from the last schedule
-        const lastDuration = lastSchedule.querySelector('input[name="duration[]"]').value;
-        
-        // Clear the values except duration
-        newSchedule.querySelectorAll('input').forEach(input => {
-            if (input.name === "duration[]") {
-                input.value = lastDuration; // Set the same duration as the last schedule
-            } else {
-                input.value = ''; // Clear other inputs
-            }
-        });
+        newSchedule.querySelectorAll('input').forEach(input => input.value = '');
         newSchedule.querySelector('select').selectedIndex = 0;
         
-        // Show the remove button for the new schedule
         const newRemoveBtn = newSchedule.querySelector('.remove-schedule-btn');
         newRemoveBtn.style.display = 'inline-block';
         
-        // If this is the second schedule, show the remove button for the first one too
         if (schedules.children.length === 1) {
-            const firstRemoveBtn = schedules.children[0].querySelector('.remove-schedule-btn');
-            firstRemoveBtn.style.display = 'inline-block';
+            schedules.children[0].querySelector('.remove-schedule-btn').style.display = 'inline-block';
         }
         
         schedules.appendChild(newSchedule);
         
-        // Initialize flatpickr for the new time input
         const newTimeInput = newSchedule.querySelector('.timePicker');
         initializeFlatpickr(newTimeInput);
     }
 
     function removeSchedule(button) {
         const schedules = document.getElementById('schedules');
-        const scheduleEntries = schedules.querySelectorAll('.schedule-entry');
-        
-        if (scheduleEntries.length > 1) {
+        if (schedules.children.length > 1) {
             button.closest('.schedule-entry').remove();
-            
-            // If only one schedule remains, hide its remove button
             if (schedules.children.length === 1) {
-                const remainingRemoveBtn = schedules.querySelector('.remove-schedule-btn');
-                if (remainingRemoveBtn) {
-                    remainingRemoveBtn.style.display = 'none';
-                }
+                schedules.querySelector('.remove-schedule-btn').style.display = 'none';
             }
         }
     }
@@ -287,49 +284,6 @@
     function w3_close() {
         document.getElementById("mySidebar").style.display = "none";
         document.getElementById("myOverlay").style.display = "none";
-    }
-
-    // Form validation before submission
-    document.querySelector('form').onsubmit = function(e) {
-        const schedules = document.getElementById('schedules').children;
-        let hasConflicts = false;
-        
-        // Check for schedule conflicts within the form
-        const scheduleTimes = [];
-        for (let i = 0; i < schedules.length; i++) {
-            const day = schedules[i].querySelector('select[name="day[]"]').value;
-            const time = schedules[i].querySelector('input[name="time[]"]').value;
-            const duration = parseInt(schedules[i].querySelector('input[name="duration[]"]').value);
-            
-            for (let j = 0; j < scheduleTimes.length; j++) {
-                if (scheduleTimes[j].day === day) {
-                    const time1 = convertTimeToMinutes(time);
-                    const time2 = convertTimeToMinutes(scheduleTimes[j].time);
-                    const end1 = time1 + (duration * 60);
-                    const end2 = time2 + (scheduleTimes[j].duration * 60);
-                    
-                    if (!(end1 <= time2 || end2 <= time1)) {
-                        alert(`Schedule conflict detected on ${day} between ${time} and ${scheduleTimes[j].time}`);
-                        hasConflicts = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (hasConflicts) break;
-            scheduleTimes.push({ day, time, duration });
-        }
-        
-        if (hasConflicts) {
-            e.preventDefault();
-            return false;
-        }
-        return true;
-    };
-
-    function convertTimeToMinutes(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
     }
 </script>
 </body>

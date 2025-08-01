@@ -1,5 +1,7 @@
 import json
 from flask import current_app
+import shutil
+import os
 
 
 class CourseManager:
@@ -39,6 +41,19 @@ class CourseManager:
         courses = CourseManager.load_courses()
         if course_id in courses and courses[course_id]['current_students'] > 0:
             courses[course_id]['current_students'] -= 1
+            CourseManager.save_courses(courses)
+            return True
+        return False
+    
+    @staticmethod
+    def delete_course(course_id):
+        courses = CourseManager.load_courses()
+        if course_id in courses:
+            upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], course_id)
+            if os.path.exists(upload_dir):
+                shutil.rmtree(upload_dir)
+            
+            del courses[course_id]
             CourseManager.save_courses(courses)
             return True
         return False

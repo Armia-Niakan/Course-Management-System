@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submission Details</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .correct-answer { background-color: #e8f5e9; border-left: 4px solid #4caf50; }
+        .incorrect-answer { background-color: #ffebee; border-left: 4px solid #f44336; }
+        .selected-option { font-weight: bold; }
+    </style>
+</head>
+<body class="w3-light-grey">
+
+    <!-- Top Navigation -->
+{% if role == 'admin' %}
+    <div class="w3-top">
+        <div class="w3-bar w3-deep-purple w3-card">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.admin_users') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-users"></i> Users
+            </a>
+            <a href="{{ url_for('admin.admin_courses') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-book"></i> Courses
+            </a>
+            <a href="{{ url_for('exam.exams_page') }}" class="w3-bar-item w3-button w3-padding-large w3-round-large">
+                <i class="fas fa-file-signature"></i> Exams
+            </a>
+            <a href="{{ url_for('admin.admin_enrollments') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-link"></i> Enrollments
+            </a>
+            <a href="{{ url_for('admin.admin_logs') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-clipboard-list"></i> Logs
+            </a>
+            <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+                <i class="fas fa-user-circle"></i> {{ username }}
+            </button>
+        </div>
+    </div>
+{% else %}
+    <div class="w3-top">
+        <div class="w3-bar w3-deep-purple w3-card">
+            <a href="{{ url_for('main.dashboard') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{{ url_for('course.courses') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-book"></i> Courses
+            </a>
+            <a href="{{ url_for('exam.exams_page') }}" class="w3-bar-item w3-button w3-padding-large w3-round-large">
+                <i class="fas fa-file-signature"></i> Exams
+            </a>
+            <a href="{{ url_for('course.calendar') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-calendar"></i> Calendar
+            </a>
+            <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+                <i class="fas fa-user-circle"></i> {{ username }}
+            </button>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Right Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-right" 
+     style="width:280px;right:0;display:none;z-index:3" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-right-align">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="w3-container w3-padding-16 w3-center">
+        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+        <span class="w3-tag w3-round w3-deep-purple">{{ role|capitalize }}</span>
+    </div>
+    <div class="w3-bar-block">
+        <a href="{{ url_for('main.profile') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-user w3-margin-right"></i> Profile
+        </a>
+        <a href="{{ url_for('main.settings') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-cog w3-margin-right"></i> Settings
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-sign-out-alt w3-margin-right"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="w3-overlay w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<div class="w3-main" style="margin-top:46px; padding: 32px;">
+    <div class="w3-container w3-card-4 w3-white w3-round-large" style="max-width: 800px; margin: auto;">
+        <div class="w3-container w3-deep-purple w3-round-large w3-padding-16 w3-margin-top">
+            <h2><i class="fas fa-user-check"></i> Submission by: {{ student.username }}</h2>
+            <p><b>Exam:</b> {{ exam.title }}</p>
+            <p><b>Final Score:</b> {{ submission.score }}%</p>
+            <a href="{{ url_for('exam.exam_results', exam_id=exam.id) }}" class="w3-button w3-light-grey w3-round w3-small w3-right">
+                <i class="fas fa-arrow-left"></i> Back to Results
+            </a>
+        </div>
+
+        <div class="w3-container w3-padding-24">
+            {% for question in exam.questions %}
+            {% set student_answer = submission.answers.get(question.id|string) %}
+            {% set is_correct = student_answer is not none and student_answer|int == question.correct_option %}
+            <div class="w3-panel w3-round-large w3-padding-16 w3-margin-bottom {{ 'correct-answer' if is_correct else 'incorrect-answer' }}">
+                <h4>
+                    <b>Question {{ loop.index }}: {{ question.text }}</b>
+                    {% if is_correct %}
+                        <i class="fas fa-check-circle w3-text-green"></i>
+                    {% else %}
+                        <i class="fas fa-times-circle w3-text-red"></i>
+                    {% endif %}
+                </h4>
+                
+                {% for option in question.options %}
+                <p class="{{ 'selected-option' if student_answer is not none and loop.index0 == student_answer|int }}">
+                    <i class="far {{ 'fa-check-square' if student_answer is not none and loop.index0 == student_answer|int else 'fa-square' }}"></i>
+                    {{ option }}
+                    {% if loop.index0 == question.correct_option %}
+                        <span class="w3-text-green">(Correct Answer)</span>
+                    {% endif %}
+                </p>
+                {% endfor %}
+                {% if student_answer is none %}
+                    <p class="w3-text-grey"><i>No answer submitted.</i></p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function w3_open() {
+    document.getElementById("mySidebar").style.display = "block";
+    document.getElementById("myOverlay").style.display = "block";
+}
+function w3_close() {
+    document.getElementById("mySidebar").style.display = "none";
+    document.getElementById("myOverlay").style.display = "none";
+}
+</script>
+
+</body>
+</html>

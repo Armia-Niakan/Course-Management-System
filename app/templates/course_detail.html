@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ course.name }} - Course Details</title>
+    <title>{{ course['name'] }} - Course Details</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -20,9 +20,26 @@
             max-height: 300px;
             overflow-y: auto;
         }        
-        .removeBtn {
-            position: absolute;
-            right: 600px;
+        .w3-file-icon {
+            width: 24px;
+            text-align: center;
+            margin-right: 8px;
+        }
+        .w3-responsive {
+            overflow-x: auto;
+        }
+        .w3-material-card {
+            transition: transform 0.3s;
+        }
+        .w3-material-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+        .w3-tablink {
+            border-radius: 8px 8px 0 0;
+        }
+        .tab-content {
+            display: none;
         }
     </style>
 </head>
@@ -62,6 +79,9 @@
             <a href="{{ url_for('course.courses') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
                 <i class="fas fa-book"></i> Courses
             </a> 
+            <a href="{{ url_for('exam.exams_page') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+                <i class="fas fa-file-signature"></i> Exams
+            </a>
             <a href="{{ url_for('course.calendar') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
                 <i class="fas fa-calendar"></i> Calendar
             </a>
@@ -104,7 +124,7 @@
     {% if messages %}
         <div class="w3-panel">
         {% for category, message in messages %}
-            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' }} w3-round w3-margin-bottom" 
+            <div class="w3-padding w3-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'yellow' }} w3-round w3-margin-bottom" 
                  id="flash-{{ loop.index }}"
                  style="position: relative; top: 35px">
                 {{ message }}
@@ -146,14 +166,18 @@
         <div class="w3-panel course-header w3-card">
             <div class="w3-row">
                 <div class="w3-twothird">
-                    <h1><b>{{ course.name }}</b></h1>
-                    <p class="w3-large">Taught by {{ course.teacher_name }} </p>
+                    <h1><b>{{ course['name'] }}</b></h1>
+                    <p class="w3-large">Taught by {{ course['teacher_name'] }} </p>
                 </div>
                 <div class="w3-third w3-right-align">
                 <span class="w3-tag w3-round w3-{{ 'red' if is_full else 'green' }} w3-large">
-                    {{ course.current_students }}/{{ course.max_students }} Students
+                    {{ course.get('current_students', 0) }}/{{ course.get('max_students', 0) }} Students
                 </span>
                 <div class="w3-margin-top">
+                    <p>
+                        <i class="fas fa-dollar-sign w3-text-deep-purple"></i> 
+                        Price: ${{ "%.2f"|format(course.get('price', 0.0)) }}
+                    </p>
                     <p>
                         <i class="fas fa-clock w3-text-deep-purple"></i> 
                         {{ hours_per_week }} hours/week
@@ -161,7 +185,7 @@
                     <p>
                     <i class="fas fa-calendar-day w3-text-deep-purple"></i> 
                         {% for schedule in sorted_schedules %}
-                            {{ schedule.day }} at {{ schedule.time }}{% if not loop.last %}, {% endif %}
+                            {{ schedule.get('day', 'N/A') }} at {{ schedule.get('time', 'N/A') }}{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                 </div>
@@ -174,22 +198,27 @@
         <div class="w3-row-padding">
             <!-- Left Column - Course Details -->
             <div class="w3-twothird">
-                <div class="w3-panel w3-white w3-round-large w3-card w3-padding">
-                    <h2 class="w3-text-deep-purple"><i class="fas fa-info-circle"></i> Course Information</h2>
+                <!-- Tab Navigation -->
+                <div class="w3-bar w3-light-grey w3-round">
+                    <button class="w3-bar-item w3-button w3-tablink w3-deep-purple" onclick="openTab(event, 'Info')"><i class="fas fa-info-circle"></i> Info</button>
+                    <button class="w3-bar-item w3-button w3-tablink" onclick="openTab(event, 'Materials')"><i class="fas fa-file-alt"></i> Materials</button>
+                    <button class="w3-bar-item w3-button w3-tablink" onclick="openTab(event, 'Exams')"><i class="fas fa-file-signature"></i> Exams</button>
+                    {% if is_teacher_of_course or role == 'admin' %}
+                    <button class="w3-bar-item w3-button w3-tablink" onclick="openTab(event, 'Students')"><i class="fas fa-users"></i> Students</button>
+                    {% endif %}
+                </div>
+
+                <!-- Info Tab -->
+                <div id="Info" class="tab-content w3-panel w3-white w3-round-large w3-card w3-padding">
                     <div class="w3-row-padding w3-margin-top">
                         <div class="w3-half">
                             <div class="w3-panel">
                                 <h4><b><i class="fas fa-clock w3-text-deep-purple"></i> Schedule</b></h4>
-                                {% for schedule in course.schedule %}
+                                {% for schedule in sorted_schedules %}
                                 <div class="w3-card w3-round-large w3-padding-small w3-margin-bottom">
-                                    <p><i class="fas fa-calendar w3-margin-right"></i> {{ schedule.day }}</p>
-                                    <p><i class="fas fa-clock w3-margin-right"></i> {{ schedule.time }}</p>
-                                    <p><i class="fas fa-hourglass w3-margin-right"></i> {{ schedule.duration }} hour session</p>
-                                    {% if schedule == current_schedule %}
-                                        <span class="w3-tag w3-green w3-round">Current Session</span>
-                                    {% elif schedule == next_schedule %}
-                                        <span class="w3-tag w3-blue w3-round">Next Session</span>
-                                    {% endif %}
+                                    <p><i class="fas fa-calendar w3-margin-right"></i> {{ schedule.get('day', 'N/A') }}</p>
+                                    <p><i class="fas fa-clock w3-margin-right"></i> {{ schedule.get('time', 'N/A') }}</p>
+                                    <p><i class="fas fa-hourglass w3-margin-right"></i> {{ schedule.get('duration', 'N/A') }} hour session</p>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -197,18 +226,162 @@
                         <div class="w3-half">
                             <div class="w3-panel">
                                 <h4><b><i class="fas fa-chalkboard-teacher w3-text-deep-purple"></i> Instructor</b></h4>
-                                <p>{{ course.teacher_name }}</p>
+                                <p>{{ course['teacher_name'] }}</p>
                                 <h4 class="w3-margin-top"><b><i class="fas fa-hashtag w3-text-deep-purple"></i> Course ID</b></h4>
-                                <p>{{ course.id }}</p>
+                                <p>{{ course['id'] }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Student List (for teachers who own this course and admins) -->
+                <!-- Course Materials Tab -->
+                <div id="Materials" class="tab-content w3-panel w3-white w3-round-large w3-card w3-padding">
+                    {% if is_teacher_of_course %}
+                    <div class="w3-panel w3-light-grey w3-round-large w3-padding">
+                        <form method="post" enctype="multipart/form-data" 
+                              action="{{ url_for('course.upload_material', course_id=course['id']) }}" 
+                              onsubmit="return validateFile()">
+                            <div class="w3-row-padding">
+                                <div class="w3-col s12 m8">
+                                    <input class="w3-input w3-border w3-round-large" type="file" name="file" id="fileInput" required>
+                                </div>
+                                <div class="w3-col s12 m4">
+                                    <button class="w3-button w3-deep-purple w3-round-large w3-block" type="submit">
+                                        <i class="fas fa-upload"></i> Upload
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="w3-row-padding w3-margin-top">
+                                <div class="w3-col s12">
+                                    <input class="w3-input w3-border w3-round-large" type="text" name="description" 
+                                           placeholder="File description (optional)">
+                                </div>
+                            </div>
+                            <p class="w3-small w3-text-grey">
+                                <i class="fas fa-info-circle"></i> Allowed: PDF, DOC, PPT, MP4, MP3, JPG, PNG (Max 500MB)
+                            </p>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.get('materials') %}
+                    <div class="w3-responsive">
+                        <table class="w3-table-all w3-hoverable">
+                            <thead>
+                                <tr class="w3-deep-purple">
+                                    <th>File</th>
+                                    <th>Size</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in course['materials'] %}
+                                <tr>
+                                    <td>
+                                        <i class="fas 
+                                            {% if material['filename'].endswith('.pdf') %}fa-file-pdf
+                                            {% elif material['filename'].endswith(('.doc', '.docx')) %}fa-file-word
+                                            {% elif material['filename'].endswith(('.ppt', '.pptx')) %}fa-file-powerpoint
+                                            {% elif material['filename'].endswith(('.mp4', '.mov', '.avi')) %}fa-file-video
+                                            {% elif material['filename'].endswith(('.mp3', '.wav')) %}fa-file-audio
+                                            {% elif material['filename'].endswith(('.jpg', '.png')) %}fa-file-image
+                                            {% else %}fa-file{% endif %} w3-margin-right"></i>
+                                        {{ material['filename'] }}
+                                        {% if material['description'] %}
+                                        <p class="w3-small w3-text-grey">{{ material['description'] }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ (material['size'] / (1024 * 1024))|round(2) }} MB</td>
+                                    <td>{{ material['upload_date']|datetimeformat('%b %d, %Y') }}</td>
+                                    <td>
+                                        {% set filename_lower = material['filename']|lower %}
+                                        {% if filename_lower.endswith('.pdf') or 
+                                            filename_lower.endswith('.jpg') or 
+                                            filename_lower.endswith('.jpeg') or 
+                                            filename_lower.endswith('.png') or 
+                                            filename_lower.endswith('.gif') or 
+                                            filename_lower.endswith('.txt') or
+                                            filename_lower.endswith('.mp4') or
+                                            filename_lower.endswith('.mp3') %}
+                                        <a href="{{ url_for('course.view_material', course_id=course['id'], filename=material['filename']) }}" 
+                                        target="_blank" class="w3-button w3-blue w3-tiny w3-round" style="margin-right: 5px;">
+                                        <i class="fas fa-eye"></i> View
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('course.download_material', course_id=course['id'], filename=material['filename']) }}" 
+                                        class="w3-button w3-green w3-tiny w3-round">
+                                        <i class="fas fa-download"></i> Download
+                                        </a>
+                                        {% if is_teacher_of_course or role == 'admin' %}
+                                        <form method="post" 
+                                            action="{{ url_for('course.delete_material', course_id=course['id'], filename=material['filename']) }}"
+                                            onsubmit="return confirm('Are you sure you want to delete this file?')"
+                                            style="display: inline-block; margin-left: 5px; vertical-align: middle;">
+                                            <button type="submit" class="w3-button w3-red w3-tiny w3-round">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="w3-panel w3-pale-yellow w3-round-large"><p><i class="fas fa-info-circle"></i> No materials have been uploaded yet.</p></div>
+                    {% endif %}
+                </div>
+
+                <!-- Exams Tab -->
+                <div id="Exams" class="tab-content w3-panel w3-white w3-round-large w3-card w3-padding">
+                    {% if is_teacher_of_course %}
+                    <a href="{{ url_for('exam.create_exam', course_id=course['id']) }}" class="w3-button w3-green w3-round-large w3-margin-bottom">
+                        <i class="fas fa-plus"></i> Create New Exam
+                    </a>
+                    {% endif %}
+
+                    {% if exams %}
+                    <ul class="w3-ul w3-hoverable">
+                        {% for exam in exams %}
+                        <li class="w3-bar">
+                            <div class="w3-bar-item">
+                                <span class="w3-large">{{ exam.title }}</span><br>
+                                <span class="w3-small w3-text-grey">{{ exam.questions|length }} questions, {{ exam.duration_minutes }} mins</span>
+                            </div>
+                            <div class="w3-bar-item w3-right">
+                                {% if role == 'student' %}
+                                    {% if exam.id in student_submissions %}
+                                        <span class="w3-tag w3-green w3-round">Submitted</span>
+                                        <p class="w3-small">Score: {{ student_submissions[exam.id].score }}%</p>
+                                    {% else %}
+                                        <a href="{{ url_for('exam.take_exam', exam_id=exam.id) }}" class="w3-button w3-blue w3-round">
+                                            <i class="fas fa-edit"></i> Take Exam
+                                        </a>
+                                    {% endif %}
+                                {% elif is_teacher_of_course or role == 'admin' %}
+                                    <a href="{{ url_for('exam.exam_results', exam_id=exam.id) }}" class="w3-button w3-deep-purple w3-round w3-small">
+                                        <i class="fas fa-poll"></i> Results
+                                    </a>
+                                    <form action="{{ url_for('exam.delete_exam', exam_id=exam.id) }}" method="POST" style="display:inline-block; margin-left:5px;" onsubmit="return confirm('Are you sure you want to delete this exam and all its submissions?');">
+                                        <button type="submit" class="w3-button w3-red w3-round w3-small">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="w3-panel w3-pale-yellow w3-round-large"><p><i class="fas fa-info-circle"></i> No exams for this course yet.</p></div>
+                    {% endif %}
+                </div>
+                
+                <!-- Student List Tab -->
                 {% if is_teacher_of_course or role == 'admin' %}
-                <div class="w3-panel w3-white w3-round-large w3-card w3-padding w3-margin-top">
-                    <h2 class="w3-text-deep-purple"><i class="fas fa-users"></i> Enrolled Students</h2>
+                <div id="Students" class="tab-content w3-panel w3-white w3-round-large w3-card w3-padding">
                     {% if students %}
                         <ul class="w3-ul student-list">
                             {% for student in students %}
@@ -220,9 +393,9 @@
                                 <div class="w3-bar-item w3-bar-right">
                                     {% if is_teacher_of_course %}
                                         <form action="{{ url_for('course.remove_student') }}" method="POST">
-                                            <input type="hidden" name="course_id" value="{{ course.id }}">
+                                            <input type="hidden" name="course_id" value="{{ course['id'] }}">
                                             <input type="hidden" name="student_email" value="{{ student.email }}">
-                                            <button type="submit" class="w3-button w3-red w3-small w3-round-large w3-margin-top removeBtn" 
+                                            <button type="submit" class="w3-button w3-red w3-small w3-round-large w3-margin-top" 
                                                     onclick="return confirm('Are you sure you want to remove this student?')">
                                                 <i class="fas fa-user-minus"></i> Remove
                                             </button>
@@ -230,8 +403,8 @@
                                     {% elif role == 'admin' %}
                                         <form action="{{ url_for('admin.admin_delete_enrollment') }}" method="POST">
                                             <input type="hidden" name="student_email" value="{{ student.email }}">
-                                            <input type="hidden" name="course_id" value="{{ course.id }}">
-                                            <button type="submit" class="w3-button w3-red w3-small w3-round-large w3-margin-top removeBtn" 
+                                            <input type="hidden" name="course_id" value="{{ course['id'] }}">
+                                            <button type="submit" class="w3-button w3-red w3-small w3-round-large w3-margin-top" 
                                                     onclick="return confirm('Are you sure you want to remove this student from the course?')">
                                                 <i class="fas fa-unlink"></i> Remove  
                                             </button>
@@ -242,9 +415,7 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <div class="w3-panel w3-pale-yellow w3-round-large">
-                            <p><i class="fas fa-info-circle"></i> No students have enrolled yet.</p>
-                        </div>
+                        <div class="w3-panel w3-pale-yellow w3-round-large"><p><i class="fas fa-info-circle"></i> No students have enrolled yet.</p></div>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -252,13 +423,13 @@
 
             <!-- Right Column - Actions -->
             <div class="w3-third">
-                <div class="w3-panel w3-white w3-round-large w3-card w3-padding">
+                 <div class="w3-panel w3-white w3-round-large w3-card w3-padding">
                     <h2 class="w3-text-deep-purple"><i class="fas fa-cogs"></i> Actions</h2>
                     <div class="w3-center w3-padding-16">
                         {% if role == 'student' %}
                             {% if is_enrolled %}
-                                <form action="{{ url_for('course.unenroll') }}" method="POST">
-                                    <input type="hidden" name="course_id" value="{{ course.id }}">
+                                <form action="{{ url_for('course.unenroll') }}" method="POST" onsubmit="return confirm('Are you sure you want to unenroll? You will not receive a refund for this course.');">
+                                    <input type="hidden" name="course_id" value="{{ course['id'] }}">
                                     <button type="submit" class="w3-button w3-red w3-round-large w3-padding-large w3-block">
                                         <i class="fas fa-user-minus w3-margin-right"></i> Unenroll
                                     </button>
@@ -270,7 +441,7 @@
                                     </button>
                                 {% else %}
                                     <form action="{{ url_for('course.enroll') }}" method="POST">
-                                        <input type="hidden" name="course_id" value="{{ course.id }}">
+                                        <input type="hidden" name="course_id" value="{{ course['id'] }}">
                                         <button type="submit" class="w3-button w3-deep-purple w3-round-large w3-padding-large w3-block">
                                             <i class="fas fa-user-plus w3-margin-right"></i> Enroll Now
                                         </button>
@@ -278,9 +449,8 @@
                                 {% endif %}
                             {% endif %}
                         {% elif is_teacher_of_course %}
-                            <!-- Teacher actions (only shown if teacher owns this course) -->
                             <form action="{{ url_for('course.delete_course') }}" method="POST" class="w3-margin-bottom">
-                                <input type="hidden" name="course_id" value="{{ course.id }}">
+                                <input type="hidden" name="course_id" value="{{ course['id'] }}">
                                 <button type="submit" class="w3-button w3-red w3-round-large w3-padding-large w3-block"
                                         onclick="return confirm('Are you sure you want to delete this course? This action cannot be undone.')">
                                     <i class="fas fa-trash-alt w3-margin-right"></i> Delete Course
@@ -288,7 +458,7 @@
                             </form>
                         {% elif role == 'admin' %} 
                             <form action="{{ url_for('admin.admin_delete_course') }}" method="post" class="w3-margin-bottom">
-                                <input type="hidden" name="course_id" value="{{ course.id }}">
+                                <input type="hidden" name="course_id" value="{{ course['id'] }}">
                                 <button type="submit" class="w3-button w3-red w3-round-large w3-padding-large w3-block"
                                         onclick="return confirm('Are you sure you want to delete this course? This action cannot be undone.')">
                                     <i class="fas fa-trash-alt w3-margin-right"></i> Delete Course
@@ -310,8 +480,26 @@
     </div>
 </div>
 
-<!-- Sidebar Scripts -->
+<!-- Scripts -->
 <script>
+    function openTab(evt, tabName) {
+        var i, x, tablinks;
+        x = document.getElementsByClassName("tab-content");
+        for (i = 0; i < x.length; i++) {
+            x[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("w3-tablink");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" w3-deep-purple", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " w3-deep-purple";
+    }
+    // Open the first tab by default
+    document.addEventListener("DOMContentLoaded", function(){
+        document.getElementsByClassName("w3-tablink")[0].click();
+    });
+
     function w3_open() {
         document.getElementById("mySidebar").style.display = "block";
         document.getElementById("myOverlay").style.display = "block";
@@ -320,6 +508,30 @@
     function w3_close() {
         document.getElementById("mySidebar").style.display = "none";
         document.getElementById("myOverlay").style.display = "none";
+    }
+    
+    // File upload validation
+    function validateFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const maxSize = 500 * 1024 * 1024; // 500MB
+        const allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'mp4', 'mov', 'avi', 'jpg', 'png', 'mp3', 'wav'];
+        
+        if (file) {
+            if (file.size > maxSize) {
+                alert('File is too large. Maximum size is 500MB.');
+                return false;
+            }
+            const extension = file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(extension)) {
+                alert('File type not allowed.');
+                return false;
+            }
+        } else {
+            alert('Please select a file.');
+            return false;
+        }
+        return true;
     }
 </script>
 

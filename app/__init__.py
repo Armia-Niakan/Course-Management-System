@@ -9,6 +9,12 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    if not os.path.exists(app.config['DATA_FOLDER']):
+        os.makedirs(app.config['DATA_FOLDER'])
+
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+
     handler = RotatingFileHandler(Config.LOG_FILE, maxBytes=10000, backupCount=3)
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
@@ -23,10 +29,12 @@ def create_app():
     from .routes.main import main_bp
     from .routes.courses import course_bp
     from .routes.admin import admin_bp
+    from .routes.exam import exam_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(course_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(exam_bp)
 
     return app

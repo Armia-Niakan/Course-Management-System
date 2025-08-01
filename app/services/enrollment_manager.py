@@ -20,6 +20,15 @@ class EnrollmentManager:
             json.dump(enrollments, f, indent=4)
 
     @staticmethod
+    def add_enrollment(student_email: str, course_id: str):
+        enrollments = EnrollmentManager.load_enrollments()
+        enrollments.append({
+            'student_email': student_email,
+            'course_id': course_id
+        })
+        EnrollmentManager.save_enrollments(enrollments)
+
+    @staticmethod
     def delete_enrollment(student_email: str, course_id: str) -> bool:
         enrollments = EnrollmentManager.load_enrollments()
         original_count = len(enrollments)
