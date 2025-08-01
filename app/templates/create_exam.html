@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Exam</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .w3-hover-rounded:hover { border-radius: 8px; }
+        .question-card { border-left: 4px solid #673ab7; }
+                .w3-inline {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="w3-light-grey">
+
+<!-- Top Navigation -->
+<div class="w3-top">
+    <div class="w3-bar w3-deep-purple w3-card">
+        <a href="{{ url_for('main.dashboard') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="{{ url_for('course.courses') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-book"></i> Courses
+        </a> 
+        <a href="{{ url_for('exam.exams_page') }}" class="w3-bar-item w3-button w3-padding-large w3-round-large">
+            <i class="fas fa-file-signature"></i> Exams
+        </a>
+        <a href="{{ url_for('course.calendar') }}" class="w3-bar-item w3-button w3-padding-large w3-hover-rounded">
+            <i class="fas fa-calendar"></i> Calendar
+        </a>
+        <button class="w3-button w3-padding-large w3-right w3-hover-rounded" onclick="w3_open()">
+            <i class="fas fa-user-circle"></i> {{ username }}
+        </button>
+    </div>
+</div>
+
+<!-- Right Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-right" 
+     style="width:280px;right:0;display:none;z-index:3" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-right-align">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="w3-container w3-padding-16 w3-center">
+        <h3 class="w3-margin-top"><b>{{ username }}</b></h3>
+        <span class="w3-tag w3-round w3-deep-purple">{{ role|capitalize }}</span>
+    </div>
+    <div class="w3-bar-block">
+        <a href="{{ url_for('main.profile') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-user w3-margin-right"></i> Profile
+        </a>
+        <a href="{{ url_for('main.settings') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-cog w3-margin-right"></i> Settings
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="w3-bar-item w3-button w3-padding">
+            <i class="fas fa-sign-out-alt w3-margin-right"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="w3-overlay w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<div class="w3-main" style="margin-top:46px; padding: 32px;">
+    <div class="w3-container w3-card-4 w3-white w3-round-large" style="max-width: 900px; margin: auto;">
+        <div class="w3-container w3-deep-purple w3-round-large w3-center w3-padding-16 w3-margin-top">
+            <h2><i class="fas fa-file-signature"></i> Create Exam for {{ course['name'] }}</h2>
+        </div>
+        <form method="POST" class="w3-container w3-padding-24" id="exam-form">
+            <p>
+                <label><b>Exam Title</b></label>
+                <input class="w3-input w3-border w3-round-large" type="text" name="title" required>
+            </p>
+            <p>
+                <label><b><i class="fas fa-clock"></i> Duration (minutes)</b></label>
+                <input class="w3-input w3-border w3-round-large" type="number" name="duration_minutes" value="30" min="1" required>
+            </p>
+
+            <div id="questions-container">
+                <!-- Questions -->
+            </div>
+
+            <div class="w3-bar w3-margin-top">
+                <button type="button" class="w3-button w3-blue w3-round-large" onclick="addQuestion()">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button type="submit" class="w3-button w3-green w3-round-large w3-right">
+                    <i class="fas fa-save"></i> Create Exam
+                </button>
+                 <a href="{{ url_for('course.course_detail', course_id=course['id']) }}" class="w3-button w3-light-grey w3-round-large w3-right w3-margin-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<template id="question-template">
+    <div class="w3-panel w3-light-grey w3-round-large w3-padding-16 question-card" data-index="__INDEX__">
+        <button type="button" class="w3-button w3-red w3-round-large w3-right" style="margin-bottom: 15px;" onclick="this.parentElement.remove()">
+            <i class="fas fa-trash"></i>
+        </button>
+        <p>
+            <label><b>Question Text</b></label>
+            <input class="w3-input w3-border w3-round-large" type="text" name="question_text___INDEX__" required>
+        </p>
+        <div class="options-container">
+            <!-- Options -->
+        </div>
+        <button type="button" class="w3-button w3-small w3-deep-purple w3-round" onclick="addOption(this)">
+            <i class="fas fa-plus-circle"></i> Add Option
+        </button>
+    </div>
+</template>
+
+<script>
+let questionCounter = 0;
+
+function addQuestion() {
+    const container = document.getElementById('questions-container');
+    const template = document.getElementById('question-template');
+    
+    let questionHtml = template.innerHTML.replace(/__INDEX__/g, questionCounter);
+    let newQuestion = document.createElement('div');
+    newQuestion.innerHTML = questionHtml;
+    
+    container.appendChild(newQuestion.firstElementChild);
+
+    const newQuestionCard = container.lastElementChild;
+    const addOptionButton = newQuestionCard.querySelector('.options-container + .w3-button');
+    addOption(addOptionButton);
+    addOption(addOptionButton);
+    
+    questionCounter++;
+}
+
+function addOption(button) {
+    const optionsContainer = button.previousElementSibling;
+    const questionIndex = optionsContainer.closest('.question-card').dataset.index;
+    const optionIndex = optionsContainer.children.length;
+
+    const div = document.createElement('div');
+    div.className = 'w3-row w3-margin-bottom w3-padding-small';
+    div.innerHTML = `
+        <div class="w3-col" style="width:50px;">
+            <input class="w3-radio" type="radio" name="correct_option_${questionIndex}" value="${optionIndex}" required>
+        </div>
+        <div class="w3-col" style="width: calc(100% - 100px);">
+            <input class="w3-input w3-border w3-round" type="text" name="option_${questionIndex}[]" required placeholder="Option text">
+        </div>
+        <div class="w3-col w3-right-align" style="width:50px;">
+            <button type="button" class="w3-button w3-medium w3-red w3-round " onclick="this.parentElement.parentElement.remove()">
+            <i class="fas fa-x"></i>
+            </button>
+        </div>
+    `;
+    optionsContainer.appendChild(div);
+}
+
+window.onload = addQuestion;
+
+function w3_open() {
+    document.getElementById("mySidebar").style.display = "block";
+    document.getElementById("myOverlay").style.display = "block";
+}
+function w3_close() {
+    document.getElementById("mySidebar").style.display = "none";
+    document.getElementById("myOverlay").style.display = "none";
+}
+</script>
+
+</body>
+</html>

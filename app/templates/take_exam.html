@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Exam: {{ exam['title'] }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        #timer {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="w3-light-grey">
+
+<div id="timer"></div>
+
+<div class="w3-main" style="margin-top:46px; padding: 32px;">
+    <div class="w3-container w3-card-4 w3-white w3-round-large" style="max-width: 800px; margin: auto;">
+        <div class="w3-container w3-deep-purple w3-round-large w3-center w3-padding-16 w3-margin-top">
+            <h1><i class="fas fa-edit"></i> {{ exam['title'] }}</h1>
+            <p>You have {{ exam['duration_minutes'] }} minutes to complete this exam.</p>
+        </div>
+        <form method="POST" id="exam-form" class="w3-container w3-padding-24">
+            {% for question in exam['questions'] %}
+            <div class="w3-panel w3-light-grey w3-round-large w3-padding-16 w3-margin-bottom">
+                <h4><b>Question {{ loop.index }}: {{ question['text'] }}</b></h4>
+                {% for option in question['options'] %}
+                <p>
+                    <input class="w3-radio" type="radio" name="question_{{ question['id'] }}" value="{{ loop.index0 }}" required>
+                    <label>{{ option }}</label>
+                </p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="w3-button w3-block w3-green w3-round-large w3-padding-large">
+                <i class="fas fa-check-circle"></i> Submit Exam
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+const durationInSeconds = parseInt('{{ exam["duration_minutes"] }}', 10) * 60;
+const examId = '{{ exam["id"] }}';
+const storageKey = `examEndTime_${examId}`;
+
+const timerDisplay = document.getElementById('timer');
+const examForm = document.getElementById('exam-form');
+
+// Get the end time from session storage.
+let examEndTime = sessionStorage.getItem(storageKey);
+
+// If it's not in storage, this is the first load. Set it.
+if (!examEndTime) {
+    const now = new Date().getTime();
+    examEndTime = now + durationInSeconds * 1000;
+    sessionStorage.setItem(storageKey, examEndTime);
+}
+
+const interval = setInterval(() => {
+    const now = new Date().getTime();
+    const timeLeft = Math.round((examEndTime - now) / 1000);
+
+    if (timeLeft <= 0) {
+        clearInterval(interval);
+        timerDisplay.textContent = "00:00";
+        if (!examForm.dataset.submitted) {
+            examForm.dataset.submitted = 'true';
+            alert("Time's up! The exam will be submitted automatically.");
+            sessionStorage.removeItem(storageKey); // Clean up
+            examForm.submit();
+        }
+        return;
+    }
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}, 1000);
+
+// Clean up storage on manual submission
+examForm.addEventListener('submit', function() {
+    sessionStorage.removeItem(storageKey);
+});
+
+</script>
+
+</body>
+</html>

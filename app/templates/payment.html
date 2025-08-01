@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment for {{ course['name'] }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .w3-hover-rounded:hover {
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="w3-light-grey">
+<div class="w3-main" style="margin-top:46px; padding: 32px;">
+    <div class="w3-container w3-card-4 w3-white w3-round-large" style="max-width: 600px; margin: auto;">
+        <div class="w3-container w3-deep-purple w3-round-large w3-padding-16 w3-margin">
+            <h2><i class="fas fa-credit-card"></i> Complete Your Enrollment</h2>
+        </div>
+        <div class="w3-container w3-padding-24">
+            <p>You are enrolling in:</p>
+            <h3><b>{{ course['name'] }}</b></h3>
+            <p class="w3-large">Total Amount: <b>${{ "%.2f"|format(course.get('price', 0.0)) }}</b></p>
+            <hr>
+            <h4>Payment Simulation</h4>            
+            <form method="POST" action="{{ url_for('course.process_payment') }}">
+                <input type="hidden" name="course_id" value="{{ course['id'] }}">
+                <div class="w3-bar w3-margin-top">
+                    <button type="submit" class="w3-button w3-green w3-round-large w3-right">
+                        <i class="fas fa-lock"></i> Pay & Enroll
+                    </button>
+                    <a href="{{ url_for('course.course_detail', course_id=course['id']) }}" class="w3-button w3-light-grey w3-round-large w3-right w3-margin-right">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
