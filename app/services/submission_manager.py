@@ -26,7 +26,6 @@ class SubmissionManager:
     @staticmethod
     def add_submission(submission: Submission):
         submissions = SubmissionManager.load_submissions()
-        # Remove any previous submission by the same student for the same exam
         submissions = [s for s in submissions if not (s.student_email == submission.student_email and s.exam_id == submission.exam_id)]
         submissions.append(submission)
         SubmissionManager.save_submissions(submissions)

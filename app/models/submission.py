@@ -5,7 +5,7 @@ from typing import Dict, Any
 class Submission:
     exam_id: str
     student_email: str
-    answers: Dict[str, Any]  # {question_id: selected_option_index}
+    answers: Dict[str, Any]  # {question_id:option_index}
     score: float
     total_questions: int
     submitted_at: str

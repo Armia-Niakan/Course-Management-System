@@ -28,7 +28,6 @@ def exams_page():
         enrolled_course_ids = {e['course_id'] for e in enrollments}
         filtered_exams = [exam for exam in all_exams if exam.course_id in enrolled_course_ids]
         
-        # Get submission status for the student
         submissions = SubmissionManager.load_submissions()
         for sub in submissions:
             if sub.student_email == user_email:
@@ -40,7 +39,6 @@ def exams_page():
     elif role == 'admin':
         filtered_exams = all_exams
 
-    # Add course name to each exam for display
     for exam in filtered_exams:
         exam.course_name = all_courses.get(exam.course_id, {}).get('name', 'Unknown Course')
 

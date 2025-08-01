@@ -22,7 +22,7 @@ class Exam:
     course_id: str
     title: str
     questions: List[Question] = field(default_factory=list)
-    duration_minutes: int = 60 # Default duration 60 minutes
+    duration_minutes: int = 30 # minutes
 
     def to_dict(self):
         return {

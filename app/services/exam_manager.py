@@ -49,7 +49,6 @@ class ExamManager:
         if exam_id in exams:
             del exams[exam_id]
             ExamManager.save_exams(exams)
-            # Also delete related submissions
             SubmissionManager.delete_submissions_for_exam(exam_id)
             return True
         return False

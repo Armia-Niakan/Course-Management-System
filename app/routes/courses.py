@@ -174,7 +174,6 @@ def enroll():
     course = CourseManager.get_course(course_id)
     email = session['user_email']
 
-    # Perform all pre-enrollment checks
     if not course:
         flash("Course not found.", "error")
         return redirect(url_for('course.courses'))
@@ -190,7 +189,6 @@ def enroll():
             flash("This course has a schedule conflict with another of your courses.", "error")
             return redirect(url_for('course.courses'))
 
-    # If the course is free, enroll directly. Otherwise, go to payment.
     if course.get('price', 0.0) <= 0:
         EnrollmentManager.add_enrollment(email, course_id)
         CourseManager.increment_students(course_id)
@@ -232,7 +230,6 @@ def process_payment():
     email = session['user_email']
     course = CourseManager.get_course(course_id)
 
-    # Re-run checks in case the student lingered on the payment page
     if not course:
         flash("Course not found.", "error")
         return redirect(url_for('course.courses'))
