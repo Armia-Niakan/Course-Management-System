@@ -52,6 +52,13 @@ def courses():
     elif role == 'teacher' and only_my:
         filtered = [c for c in filtered if c['teacher'] == user_email]
 
+    for course in filtered:
+        schedules = course.get('schedule', [])
+        if isinstance(schedules, list):
+            course['sorted_schedules'] = sorted(schedules, key=lambda s: (s.get('day', ''), s.get('time', '')))
+        else:
+            course['sorted_schedules'] = []
+
     return render_template('courses.html',
                            role=role,
                            username=session['username'],
