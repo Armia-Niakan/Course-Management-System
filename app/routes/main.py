@@ -32,29 +32,39 @@ def dashboard():
     if role == 'admin':
         return redirect(url_for('admin.admin_dashboard'))
     
+    courses = []
+    enrollments = []
+    total_students = 0
+    total_hours = 0
+
     if role == 'student':
         enrollments = EnrollmentManager.get_student_enrollments(user_email)
         courses = [all_courses.get(e['course_id']) for e in enrollments if all_courses.get(e['course_id'])]
-        total_hours = sum(sch['duration'] for course in courses for sch in course['schedule'])
-    else:
-        courses = [c for c in all_courses.values() if c['teacher'] == user_email]
-        total_students = 0
-        total_hours = 0
+        total_hours = sum(sch.get('duration', 0) for course in courses if course for sch in course.get('schedule', []))
+    else: # Teacher
+        courses = [c for c in all_courses.values() if c.get('teacher') == user_email]
         for course in courses:
-            enrolled = EnrollmentManager.get_course_enrollments(course['id'])
-            course['student_count'] = len(enrolled)
-            total_students += len(enrolled)
-            total_hours += sum(s['duration'] for s in course['schedule'])
+            enrolled_count = len(EnrollmentManager.get_course_enrollments(course['id']))
+            course['student_count'] = enrolled_count
+            total_students += enrolled_count
+            total_hours += sum(s.get('duration', 0) for s in course.get('schedule', []))
 
     ongoing = []
     upcoming = []
     tomorrow = []
+    
+    ongoing_ids = set()
+    upcoming_ids = set()
+    tomorrow_ids = set()
 
     for course in courses:
-        for s in course['schedule']:
-            course_copy = course.copy()
-            course_copy['time'] = s['time']
-            course_copy['duration'] = s['duration']
+        if not isinstance(course, dict) or 'id' not in course:
+            continue
+
+        course_id = course['id']
+        for s in course.get('schedule', []):
+            if not all(k in s for k in ['day', 'time', 'duration']):
+                continue
 
             course_time = datetime.datetime.strptime(s['time'], "%H:%M").time()
             end_time = (datetime.datetime.combine(datetime.date.today(), course_time) +
@@ -62,11 +72,23 @@ def dashboard():
 
             if s['day'] == current_day:
                 if course_time <= now < end_time:
-                    ongoing.append(course_copy)
+                    if course_id not in ongoing_ids:
+                        course_copy = course.copy()
+                        course_copy.update(s)
+                        ongoing.append(course_copy)
+                        ongoing_ids.add(course_id)
                 elif now < course_time:
-                    upcoming.append(course_copy)
+                    if course_id not in upcoming_ids:
+                        course_copy = course.copy()
+                        course_copy.update(s)
+                        upcoming.append(course_copy)
+                        upcoming_ids.add(course_id)
             elif s['day'] == next_day:
-                tomorrow.append(course_copy)
+                if course_id not in tomorrow_ids:
+                    course_copy = course.copy()
+                    course_copy.update(s)
+                    tomorrow.append(course_copy)
+                    tomorrow_ids.add(course_id)
 
     return render_template('dashboard.html',
                            role=role,

@@ -72,7 +72,13 @@ def create_course():
 
     if request.method == 'POST':
         courses = CourseManager.load_courses()
-        course_id = str(len(courses) + 1)
+        
+        if courses:
+            max_id = max(int(k) for k in courses.keys())
+        else:
+            max_id = 0
+        course_id = str(max_id + 1)
+
         days = request.form.getlist('day[]')
         times = request.form.getlist('time[]')
         durations = request.form.getlist('duration[]')
@@ -98,9 +104,9 @@ def create_course():
         }
 
         for existing in courses.values():
-            if existing['teacher'] == session['user_email']:
+            if existing.get('teacher') == session['user_email']:
                 if are_conflicting(existing, new_course):
-                    flash(f"Schedule conflicts with course '{existing['name']}'", "error")
+                    flash(f"Schedule conflicts with course '{existing.get('name')}'", "error")
                     return redirect(url_for('course.create_course'))
 
         courses[course_id] = new_course
