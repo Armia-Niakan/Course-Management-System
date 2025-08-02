@@ -14,6 +14,15 @@
         .danger-zone {
             border-left: 4px solid #f44336;
         }
+        .w3-password-container {
+            position: relative;
+        }
+        .w3-show-password {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -144,7 +153,10 @@
                         </div>
                         <div class="w3-section">
                             <label><b>Confirm Password</b></label>
-                            <input class="w3-input w3-border w3-round-large" type="password" name="password" required>
+                            <div class="w3-password-container">
+                                <input class="w3-input w3-border w3-round-large" type="password" name="password" id="username_confirm_password" required>
+                                <i class="fas fa-eye w3-show-password" onclick="togglePassword('username_confirm_password')"></i>
+                            </div>
                         </div>
                         <button type="submit" class="w3-button w3-deep-purple w3-round-large">
                             <i class="fas fa-save w3-margin-right"></i> Update Username
@@ -158,15 +170,24 @@
                     <form method="POST" action="/update_password">
                         <div class="w3-section">
                             <label><b>Current Password</b></label>
-                            <input class="w3-input w3-border w3-round-large" type="password" name="current_password" required>
+                            <div class="w3-password-container">
+                                <input class="w3-input w3-border w3-round-large" type="password" name="current_password" id="current_password" required>
+                                <i class="fas fa-eye w3-show-password" onclick="togglePassword('current_password')"></i>
+                            </div>
                         </div>
                         <div class="w3-section">
                             <label><b>New Password</b></label>
-                            <input class="w3-input w3-border w3-round-large" type="password" name="new_password" required>
+                            <div class="w3-password-container">
+                                <input class="w3-input w3-border w3-round-large" type="password" name="new_password" id="new_password" required>
+                                <i class="fas fa-eye w3-show-password" onclick="togglePassword('new_password')"></i>
+                            </div>
                         </div>
                         <div class="w3-section">
                             <label><b>Confirm New Password</b></label>
-                            <input class="w3-input w3-border w3-round-large" type="password" name="confirm_password" required>
+                            <div class="w3-password-container">
+                                <input class="w3-input w3-border w3-round-large" type="password" name="confirm_password" id="confirm_password" required>
+                                <i class="fas fa-eye w3-show-password" onclick="togglePassword('confirm_password')"></i>
+                            </div>
                         </div>
                         <button type="submit" class="w3-button w3-deep-purple w3-round-large">
                             <i class="fas fa-save w3-margin-right"></i> Update Password
@@ -186,7 +207,10 @@
                         <form method="POST" action="/delete_account" onsubmit="return confirmDelete()">
                             <div class="w3-section">
                                 <label><b>Confirm Password</b></label>
-                                <input class="w3-input w3-border w3-round-large" type="password" name="password" required>
+                                <div class="w3-password-container">
+                                    <input class="w3-input w3-border w3-round-large" type="password" name="password" id="delete_confirm_password" required>
+                                    <i class="fas fa-eye w3-show-password" onclick="togglePassword('delete_confirm_password')"></i>
+                                </div>
                             </div>
                             <button type="submit" class="w3-button w3-red w3-round-large">
                                 <i class="fas fa-trash-alt w3-margin-right"></i> Delete My Account
@@ -227,6 +251,19 @@
     
     function confirmDelete() {
         return confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
+    }
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.nextElementSibling;
+        if (field.type === "password") {
+            field.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 </script>
 

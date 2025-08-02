@@ -16,6 +16,15 @@
         .w3-hover-rounded:hover {
             border-radius: 8px;
         }
+        .w3-password-container {
+            position: relative;
+        }
+        .w3-show-password {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="w3-light-grey">
@@ -129,21 +138,22 @@
         </p>
         <p>
             <label><i class="fas fa-lock w3-margin-right"></i>Password</label>
-            <input class="w3-input w3-border w3-round-large" type="password" name="password"
-                   required pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}"
-                   title="Must contain at least one uppercase, one lowercase, one special character, and at least 8 characters.">
-                    <div class="w3-text-gray" style="font-size: 12px;margin-top: -10px;">
-                    Password must contain at least 8 characters including uppercase, lowercase, and special characters.
-                    </div>
+            <div class="w3-password-container">
+                <input class="w3-input w3-border w3-round-large" type="password" name="password" id="password"
+                       required pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}"
+                       title="Must contain at least one uppercase, one lowercase, one special character, and at least 8 characters.">
+                <i class="fas fa-eye w3-show-password" onclick="togglePassword('password')"></i>
+            </div>
+            <div class="w3-text-gray" style="font-size: 12px;margin-top: 5px;">
+                Password must contain at least 8 characters including uppercase, lowercase, and special characters.
+            </div>
         </p>
         <p>
             <label><i class="fas fa-lock w3-margin-right"></i>Confirm Password</label>
-            <input class="w3-input w3-border w3-round-large" type="password" name="confirm-password" required>
-        </p>
-        <p>
-            <button type="submit" class="w3-button w3-deep-purple w3-block w3-round-large">
-                <i class="fas fa-user-plus w3-margin-right"></i>Create Admin
-            </button>
+            <div class="w3-password-container">
+                <input class="w3-input w3-border w3-round-large" type="password" name="confirm-password" id="confirm-password" required>
+                <i class="fas fa-eye w3-show-password" onclick="togglePassword('confirm-password')"></i>
+            </div>
         </p>
     </form>
 
@@ -163,6 +173,19 @@
     function w3_close() {
         document.getElementById("mySidebar").style.display = "none";
         document.getElementById("myOverlay").style.display = "none";
+    }
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.nextElementSibling;
+        if (field.type === "password") {
+            field.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 </script>
 </body>
