@@ -188,9 +188,20 @@
                                 <div class="w3-col m9">
                                     <h4><b>{{ course['name'] }}</b></h4>
                                     <div class="w3-text-grey">
-                                        <p><i class="fas fa-user-tie w3-text-deep-purple"></i> Teacher: {{ course['teacher_name'] }}</p>
-                                        <p><i class="fas fa-users w3-text-deep-purple"></i> {{ course['current_students'] }}/{{ course['max_students'] }} students</p>
-                                        <p><i class="fas fa-dollar-sign w3-text-deep-purple"></i> Price: ${{ "%.2f"|format(course.get('price', 0.0)) }}</p>
+                                        <p><i class="fas fa-user-tie w3-text-deep-purple w3-margin-right"></i>Teacher: {{ course['teacher_name'] }}</p>
+                                        <p>
+                                            <i class="fas fa-calendar-day w3-text-deep-purple w3-margin-right"></i>
+                                            {% for schedule in course.sorted_schedules %}
+                                                {{ schedule.get('day') }} at {{ schedule.get('time') }}{% if not loop.last %},      {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                        <p><i class="fas fa-users w3-text-deep-purple w3-margin-right"></i>{{ course['current_students'] }}/{{ course['max_students'] }} students</p>
+                                        <p><i class="fas fa-dollar-sign w3-text-deep-purple w3-margin-right"></i>Price: 
+                                            {% if not course.get('price')==0.0 %}
+                                                ${{ "%.2f"|format(course.get('price', 0.0)) }}
+                                            {% else %}
+                                                Free
+                                            {% endif %}</p>
                                     </div>
                                 </div>
                                 <div class="w3-col m3 w3-center w3-padding-16">
