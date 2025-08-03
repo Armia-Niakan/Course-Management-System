@@ -258,7 +258,7 @@
                                 </div>
                             </div>
                             <p class="w3-small w3-text-grey">
-                                <i class="fas fa-info-circle"></i> Allowed: PDF, DOC, PPT, MP4, MP3, JPG, PNG (Max 500MB)
+                                <i class="fas fa-info-circle"></i> Allowed: PDF, DOC, PPT, MP4, MKV, MP3, JPG, PNG (Max 500MB)
                             </p>
                         </form>
                     </div>
@@ -283,7 +283,7 @@
                                             {% if material['filename'].endswith('.pdf') %}fa-file-pdf
                                             {% elif material['filename'].endswith(('.doc', '.docx')) %}fa-file-word
                                             {% elif material['filename'].endswith(('.ppt', '.pptx')) %}fa-file-powerpoint
-                                            {% elif material['filename'].endswith(('.mp4', '.mov', '.avi')) %}fa-file-video
+                                            {% elif material['filename'].endswith(('.mp4', '.mov', 'avi', '.mkv')) %}fa-file-video
                                             {% elif material['filename'].endswith(('.mp3', '.wav')) %}fa-file-audio
                                             {% elif material['filename'].endswith(('.jpg', '.png')) %}fa-file-image
                                             {% else %}fa-file{% endif %} w3-margin-right"></i>
@@ -515,7 +515,7 @@
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
         const maxSize = 500 * 1024 * 1024; // 500MB
-        const allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'mp4', 'mov', 'avi', 'jpg', 'png', 'mp3', 'wav'];
+        const allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'mp4', 'mov', 'avi', 'mkv', 'jpg', 'png', 'mp3', 'wav'];
         
         if (file) {
             if (file.size > maxSize) {
