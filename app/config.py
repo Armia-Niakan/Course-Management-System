@@ -18,7 +18,7 @@ class Config:
     SUBMISSIONS_FILE = 'data/submissions.json'
 
     UPLOAD_FOLDER = os.path.join(basedir, '..', 'uploads')
-    ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'mp4', 'mov', 'avi', 'jpg', 'png', 'mp3', 'wav'}
+    ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'mp4', 'mov', 'avi', 'mkv', 'jpg', 'png', 'mp3', 'wav'}
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024
 
     SMTP_SERVER = 'smtp.gmail.com'
