@@ -10,6 +10,8 @@ from app.utils.decorators import admin_required
 from app.services.user_manager import UserManager
 from app.services.course_manager import CourseManager
 from app.services.enrollment_manager import EnrollmentManager
+from app.services.exam_manager import ExamManager
+from app.services.submission_manager import SubmissionManager
 from app.models.user import User
 
 admin_bp = Blueprint('admin', __name__, url_prefix="/admin")
@@ -174,10 +176,35 @@ def admin_delete_user():
         flash("You cannot delete your own account from here", "error")
         return redirect(url_for('admin.admin_users'))
 
+    user = UserManager.get_user(email)
+    if not user:
+        flash("User not found", "error")
+        return redirect(url_for('admin.admin_users'))
+    
+    role = user.role
+
+    if role == 'teacher':
+        courses = CourseManager.load_courses()
+        teacher_course_ids = [cid for cid, c in courses.items() if c['teacher'] == email]
+        
+        for course_id in teacher_course_ids:
+            exams_to_delete = ExamManager.get_exams_for_course(course_id)
+            for exam in exams_to_delete:
+                ExamManager.delete_exam(exam.id)
+        
+        for course_id in teacher_course_ids:
+            CourseManager.delete_course(course_id)
+        
+        all_enrollments = EnrollmentManager.load_enrollments()
+        remaining_enrollments = [e for e in all_enrollments if e['course_id'] not in teacher_course_ids]
+        EnrollmentManager.save_enrollments(remaining_enrollments)
+
     if UserManager.delete_user(email):
-        enrollments = EnrollmentManager.load_enrollments()
-        enrollments = [e for e in enrollments if e['student_email'] != email]
-        EnrollmentManager.save_enrollments(enrollments)
+        if role != 'teacher':
+            enrollments = EnrollmentManager.load_enrollments()
+            enrollments = [e for e in enrollments if e['student_email'] != email]
+            EnrollmentManager.save_enrollments(enrollments)
+        
         flash(f"User {email} deleted", "success")
         current_app.logger.info(f"User {email} deleted by admin {session.get('user_email')}")
     else:

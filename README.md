@@ -94,7 +94,7 @@ A comprehensive Course Management System built with Python and Flask. It provide
    
    You can use .env.example
     ```bash
-    cp .env.example .env
+    cp .env.example .env   # in cmd, use `copy .env.example .env`
     # Then edit .env with your values.
     ```
 5.  **Run the application:**

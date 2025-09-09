@@ -5,6 +5,8 @@ import datetime
 from app.services.user_manager import UserManager
 from app.services.course_manager import CourseManager
 from app.services.enrollment_manager import EnrollmentManager
+from app.services.exam_manager import ExamManager
+from app.services.submission_manager import SubmissionManager
 from app.utils.decorators import login_required, admin_required, teacher_required
 main_bp = Blueprint('main', __name__)
 
@@ -196,7 +198,6 @@ def update_password():
 @main_bp.route("/delete_account", methods=['POST'])
 @login_required
 def delete_account():
-
     password = request.form.get('password')
     email = session['user_email']
     user = UserManager.get_user(email)
@@ -216,12 +217,19 @@ def delete_account():
 
     elif role == 'teacher':
         courses = CourseManager.load_courses()
-        teacher_ids = [cid for cid, c in courses.items() if c['teacher'] == email]
-        for cid in teacher_ids:
-            del courses[cid]
-        CourseManager.save_courses(courses)
-        EnrollmentManager.save_enrollments(
-            [e for e in EnrollmentManager.load_enrollments() if e['course_id'] not in teacher_ids])
+        teacher_course_ids = [cid for cid, c in courses.items() if c['teacher'] == email]
+        
+        for course_id in teacher_course_ids:
+            exams_to_delete = ExamManager.get_exams_for_course(course_id)
+            for exam in exams_to_delete:
+                ExamManager.delete_exam(exam.id)
+        
+        for course_id in teacher_course_ids:
+            CourseManager.delete_course(course_id)
+        
+        all_enrollments = EnrollmentManager.load_enrollments()
+        remaining_enrollments = [e for e in all_enrollments if e['course_id'] not in teacher_course_ids]
+        EnrollmentManager.save_enrollments(remaining_enrollments)
 
     UserManager.delete_user(email)
     session.clear()
